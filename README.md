@@ -1,6 +1,6 @@
 # CAN Chaos Fuzzer (Arduino UNO R4 WiFi + SN65HVD230)
 
-**Tagline:** *A red‑team–oriented CAN fuzzing and chaos‑injection toolkit for embedded/avionics‑style networks using Arduino UNO R4 WiFi (RA4M1 CAN controller) + SN65HVD230 transceiver.*
+*A red‑team–oriented CAN fuzzing and chaos‑injection toolkit for embedded/avionics‑style networks using Arduino UNO R4 WiFi (RA4M1 CAN controller) + SN65HVD230 transceiver.*
 
 > ⚠️ **For authorized lab testing only.** Do not connect to production vehicles, aircraft, or any real system without explicit written permission. Bench‑only, isolated bus with proper termination.
 
