@@ -1,10 +1,3 @@
-# CAN Chaos Fuzzer (Recreated)
-
-This folder was recreated to add sniffer and references.
-
-
----
-
 ## 📖 References & Further Reading
 
 ### CAN Protocol & Standards
