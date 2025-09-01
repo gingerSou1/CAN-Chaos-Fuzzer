@@ -2,7 +2,7 @@
 #include <CAN.h>   // Install Arduino CAN (UNO R4 WiFi / Renesas compatible)
 
 // ----------------- Safety & State -----------------
-static bool ARMED = false;           // Transmit disabled by default
+static bool STATE = false;           // Transmit disabled by default
 static uint8_t activeProfile = 0;    // 0=off, 1=random, 2=mutate, 3=flood
 
 // ----------------- Timing (rate limits) -----------------
@@ -35,9 +35,9 @@ static void handleSerial() {
   char c = Serial.read();
   switch (c) {
     case 'a':
-      ARMED = true; Serial.println(F(">> ARMED: transmission enabled")); break;
+      STATE = true; Serial.println(F(">> STATE: transmission enabled")); break;
     case 's':
-      ARMED = false; activeProfile = 0; Serial.println(F(">> SAFE: transmission disabled")); break;
+      STATE = false; activeProfile = 0; Serial.println(F(">> SAFE: transmission disabled")); break;
     case '1':
       activeProfile = 1; Serial.println(F(">> Profile: Random")); break;
     case '2':
@@ -61,7 +61,7 @@ static void handleSerial() {
       break;
     }
     case 'i':
-      Serial.print(F("ARMED=")); Serial.print(ARMED);
+      Serial.print(F("STATE=")); Serial.print(STATE);
       Serial.print(F(" profile=")); Serial.print(activeProfile);
       Serial.print(F(" txIntervalMs=")); Serial.print(txIntervalMs);
       Serial.print(F(" floodIntervalMs=")); Serial.println(floodIntervalMs);
@@ -114,14 +114,14 @@ void setup() {
   }
   Serial.println(F("CAN init OK."));
   printMenu();
-  Serial.println(F("STARTUP: SAFE (disarmed). Press [a] to arm, then choose a profile."));
+  Serial.println(F("STARTUP: SAFE (disSTATE). Press [a] to arm, then choose a profile."));
 }
 
 void loop() {
   handleSerial();
 
   // Passive receive/logging when SAFE (optional basic RX check)
-  if (!ARMED || activeProfile == 0) {
+  if (!STATE || activeProfile == 0) {
     int packetSize = CAN.parsePacket();
     if (packetSize) {
       // You can read and optionally log here
