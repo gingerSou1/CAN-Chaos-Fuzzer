@@ -1,0 +1,24 @@
+{
+  "profiles": [
+    {
+      "name": "random_safe",
+      "txIntervalMs": 20,
+      "desc": "Random IDs/payloads, rate-limited"
+    },
+    {
+      "name": "mutate_targets",
+      "txIntervalMs": 20,
+      "targets": [
+        "0x100",
+        "0x200",
+        "0x321"
+      ],
+      "desc": "Mutate payloads for selected IDs"
+    },
+    {
+      "name": "dos_flood",
+      "floodIntervalMs": 2,
+      "desc": "Aggressive priority flood (explicit opt-in)"
+    }
+  ]
+}
