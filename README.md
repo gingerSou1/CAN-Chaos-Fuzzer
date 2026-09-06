@@ -178,6 +178,7 @@ CAN-Chaos-Fuzzer/
 ├── platformio.ini
 ├── README.md
 ├── LICENSE
+├── CHANGELOG.md
 │
 ├── include/
 │   ├── can_driver.h
@@ -362,10 +363,10 @@ The expected state machine is:
 
 A test must never begin automatically after:
 
-* power-on
-* reset
-* firmware upload
-* serial reconnect
+* Power-on
+* Reset
+* Firmware upload
+* Serial reconnect
 
 A `start` command while the system is `SAFE` must be rejected.
 
@@ -386,11 +387,11 @@ Active experiments must support immediate termination.
 Initial development defaults:
 
 ```text
-CAN bitrate:      500 kbps
-CAN format:       Classical CAN
-Identifier:       11-bit standard
-Boot state:       SAFE
-Serial:           115200 baud
+CAN bitrate:       500 kbps
+CAN format:        Classical CAN
+Identifier:        11-bit standard
+Boot state:        SAFE
+Serial:            115200 baud
 Automatic fuzzing: Disabled
 ```
 
@@ -523,8 +524,8 @@ Generate randomized:
 
 * CAN IDs
 * DLC values
-* payloads
-* transmission intervals
+* Payloads
+* Transmission intervals
 
 Random fuzzing should support deterministic seeds so discovered behavior can be reproduced.
 
@@ -558,11 +559,8 @@ Original:
 Mutated:
 
 120#FF3C000000000000
-
 120#003D000000000000
-
 120#0000000000000000
-
 120#FFFFFFFFFFFFFFFF
 ```
 
@@ -776,14 +774,14 @@ Example:
 
 ```json
 {
-    "name": "RPM Payload Mutation",
-    "mode": "payload_mutation",
-    "target_id": "0x120",
-    "mutation": "random",
-    "interval_ms": 100,
-    "duration_seconds": 30,
-    "recovery_seconds": 30,
-    "seed": 1337
+  "name": "RPM Payload Mutation",
+  "mode": "payload_mutation",
+  "target_id": "0x120",
+  "mutation": "random",
+  "interval_ms": 100,
+  "duration_seconds": 30,
+  "recovery_seconds": 30,
+  "seed": 1337
 }
 ```
 
@@ -925,9 +923,9 @@ Long-term architecture:
 
 This provides separation between:
 
-* attack generation
-* monitoring
-* target behavior
+* Attack generation
+* Monitoring
+* Target behavior
 
 ---
 
@@ -939,11 +937,11 @@ This project is not intended to model one specific vehicle or platform.
 
 However, the testing methodology is particularly relevant to systems where CAN communication participates in:
 
-* distributed control
-* sensor communication
-* actuator control
-* subsystem coordination
-* health/status reporting
+* Distributed control
+* Sensor communication
+* Actuator control
+* Subsystem coordination
+* Health/status reporting
 
 The repository includes additional documentation exploring relationships to CANaerospace and ARINC 825-style environments.
 
