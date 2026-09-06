@@ -1,71 +1,91 @@
 # CAN Chaos Fuzzer
 
-Contributor guidance: [coding and release conventions](CONTRIBUTING.md),
-[security policy](SECURITY.md), and [build/validation guide](docs/developer-guide.md).
-
 > A CAN bus fuzzing and chaos-injection platform for embedded security, resilience, and adversarial verification testing.
 
-CAN Chaos Fuzzer is an open-source embedded security research project designed to evaluate how CAN-based systems behave when normal assumptions about network traffic are intentionally violated.
+CAN Chaos Fuzzer is an open-source embedded security research project for evaluating how CAN-based systems behave when normal assumptions about network traffic are intentionally violated.
 
-Rather than simply generating random CAN frames, the project is intended to provide a repeatable test platform for manipulating:
+Rather than simply generating random CAN frames, the project is being developed as a repeatable security test platform for manipulating:
 
-* Message content
-* CAN identifiers
-* Message timing
-* Message frequency
-* Message ordering
-* Arbitration priority
-* Bus load
-* Application state transitions
+- Message content
+- CAN identifiers
+- Message timing
+- Message frequency
+- Message ordering
+- Arbitration priority
+- Bus load
+- Application state transitions
 
 The central question behind the project is:
 
 > **What happens to an embedded system when its CAN network stops behaving the way its developers assumed it would?**
 
-The project combines traditional fuzz testing with concepts from adversarial testing, fault injection, and chaos engineering to evaluate not only whether a system fails, but **how it fails and how it recovers**.
+The project combines traditional fuzz testing with concepts from adversarial testing, fault injection, resilience testing, and chaos engineering to evaluate not only whether a system fails, but **how it fails, how it responds, and how it recovers**.
 
 ---
 
-# Project Status
+## Project Status
 
-> **Current Phase: CAN Foundation / Milestone 1**
+**Current Phase: Milestone 1C — Hardware Acceptance**
 
-The project is under active development.
+Milestones 1A and 1B established the software, control, and safety foundation.
 
-The current implementation is focused on establishing a reliable and safe CAN testing foundation before implementing the full fuzzing engine.
+### Software Foundation
 
-Current development priorities:
+- [x] PlatformIO project structure
+- [x] Pinned Renesas RA platform and toolchain
+- [x] Arduino UNO R4 WiFi firmware target
+- [x] Separate CAN sniffer firmware target
+- [x] Modular firmware architecture
+- [x] Native RA4M1 CAN driver abstraction
+- [x] SAFE / ARMED / RUNNING / FAULT state model
+- [x] Safety enforcement at the CAN transmit boundary
+- [x] Serial command interface
+- [x] Bounded serial processing
+- [x] Bounded CAN receive processing
+- [x] Buffered and bounded logging
+- [x] Runtime CAN fault propagation
+- [x] Experiment cancellation on fault
+- [x] CAN transmission rate limiting
+- [x] Standard/extended RX frame preservation
+- [x] Host-side automated testing
+- [x] 18 host tests passing
 
-* [x] Migration from Arduino sketch structure to PlatformIO
-* [x] Modular firmware architecture
-* [ ] Native RA4M1 CAN controller bring-up
-* [ ] CAN transmit validation
-* [ ] CAN receive validation
-* [ ] SAFE / ARMED / RUNNING state validation
-* [ ] Serial command interface validation
-* [ ] Experiment lifecycle
-* [ ] Structured logging
-* [ ] Hardware acceptance testing
+### Hardware Acceptance
 
-Fuzzing and chaos-injection strategies will be implemented after the CAN foundation has been validated on hardware.
+- [ ] Flash firmware to physical UNO R4 WiFi
+- [ ] Validate SAFE state on hardware boot
+- [ ] Validate physical CAN initialization
+- [ ] Validate known-frame CAN transmission
+- [ ] Validate known-frame CAN reception
+- [ ] Validate independent sniffer observation
+- [ ] Validate STOP behavior on hardware
+- [ ] Measure STOP latency
+- [ ] Validate CAN fault behavior
+- [ ] Validate reset/reconnect safety behavior
+
+Fuzzing strategies will be implemented **after hardware acceptance is complete**.
 
 ---
 
-# Goals
+## Project Goals
 
-The long-term goal is to create a small, reusable **CAN security test instrument** capable of conducting repeatable experiments against embedded systems.
+The long-term goal is to create a small, reusable **CAN security test instrument** capable of conducting controlled and repeatable experiments against embedded systems.
 
 The intended progression is:
 
 ```text
 CAN Traffic Generator
-        ↓
+        |
+        v
 CAN Fuzzer
-        ↓
+        |
+        v
 CAN Chaos Injector
-        ↓
+        |
+        v
 Instrumented Test Harness
-        ↓
+        |
+        v
 Repeatable Embedded Security Test Platform
 ```
 
@@ -81,16 +101,16 @@ State
 Recovery
 ```
 
-A successful experiment should answer more than:
+A useful security experiment should answer more than:
 
 > Did the target crash?
 
-It should help answer:
+It should help determine:
 
 ```text
 What input caused the behavior?
 
-Was the failure deterministic?
+Was the behavior deterministic?
 
 What state did the target enter?
 
@@ -109,11 +129,11 @@ Could the behavior be reproduced?
 
 ---
 
-# Hardware
+## Hardware
 
-## Fuzzer
+### Primary Fuzzer
 
-The primary fuzzing node is:
+The primary fuzzing node is an:
 
 **Arduino UNO R4 WiFi**
 
@@ -121,13 +141,13 @@ The UNO R4 WiFi contains a Renesas RA4M1 microcontroller with a native CAN contr
 
 The project uses the RA4M1 CAN peripheral rather than an external MCP2515 CAN controller.
 
-An external CAN transceiver provides the physical CAN interface.
+An external CAN transceiver provides the physical bus interface.
 
 Current target transceiver:
 
 **SN65HVD230**
 
-Architecture:
+### Hardware Architecture
 
 ```text
 +---------------------------+
@@ -147,75 +167,82 @@ Architecture:
              |
         CANH / CANL
              |
-============ CAN BUS ============
+============= CAN BUS =============
+             |
+     +-------+-------+
+     |               |
+     v               v
+Target ECU       CAN Monitor
+                 / Sniffer
 ```
+
+Hardware development and testing are performed on an isolated CAN bench.
+
+See the `hardware/` directory for wiring and bill-of-material information.
 
 ---
 
-# Development Environment
+## Development Environment
 
-The firmware is developed using:
+Firmware development uses:
 
-* Visual Studio Code
-* PlatformIO
-* Arduino framework
-* C/C++
-* Git
-* GitHub
+- Visual Studio Code
+- PlatformIO
+- Arduino framework
+- C/C++
+- Git
+- GitHub
 
-Host-side tooling will primarily use:
+Host-side development uses or is expected to use:
 
-* Python 3
-* Linux
-* SocketCAN
+- Python 3
+- Native host testing
+- Linux
+- SocketCAN
 
 The project intentionally uses a modular firmware architecture instead of a single Arduino `.ino` sketch.
 
 ---
 
-# Repository Structure
+## Repository Structure
 
 ```text
 CAN-Chaos-Fuzzer/
-│
-├── platformio.ini
-├── README.md
-├── LICENSE
-├── CHANGELOG.md
-│
+|
 ├── include/
-│   ├── can_driver.h
-│   ├── command_interface.h
-│   ├── experiment.h
-│   ├── logger.h
-│   └── safety.h
-│
+|   ├── can_driver.h
+|   ├── command_interface.h
+|   ├── experiment.h
+|   ├── logger.h
+|   └── safety.h
+|
 ├── src/
-│   ├── main.cpp
-│   ├── can_driver.cpp
-│   ├── command_interface.cpp
-│   ├── experiment.cpp
-│   ├── logger.cpp
-│   └── safety.cpp
-│
-├── docs/
-│   ├── architecture.md
-│   ├── threat-model.md
-│   ├── experiment-design.md
-│   └── aerospace-mapping.md
-│
-├── examples/
-│
-├── hardware/
-│   ├── BOM.md
-│   └── wiring.md
-│
+|   ├── main.cpp
+|   ├── sniffer_main.cpp
+|   ├── can_driver.cpp
+|   ├── command_interface.cpp
+|   ├── experiment.cpp
+|   ├── logger.cpp
+|   └── safety.cpp
+|
+├── test/
+|   ├── fakes/
+|   └── test_control/
+|
 ├── tools/
-│
-└── tests/
+|   └── host_compiler.py
+|
+├── docs/
+├── examples/
+├── hardware/
+|
+├── platformio.ini
+├── CHANGELOG.md
+├── README.md
+└── LICENSE
 ```
 
-As development progresses, fuzzing strategies will be separated into their own modules.
+As development progresses, fuzzing strategies will be separated into dedicated modules.
 
 Planned structure:
 
@@ -230,11 +257,13 @@ src/
     └── load_generator.cpp
 ```
 
+These strategy modules are part of the planned architecture and are **not yet implemented**.
+
 ---
 
-# Building
+## Building
 
-## Requirements
+### Requirements
 
 Install:
 
@@ -248,16 +277,41 @@ git clone https://github.com/gingerSou1/CAN-Chaos-Fuzzer.git
 cd CAN-Chaos-Fuzzer
 ```
 
-Build:
+Build the primary firmware:
 
 ```bash
-pio run
+pio run -e uno_r4_wifi
 ```
 
-Upload to the Arduino UNO R4 WiFi:
+Build the primary firmware and sniffer:
 
 ```bash
-pio run --target upload
+pio run -e uno_r4_wifi -e sniffer
+```
+
+Run the host-side test suite:
+
+```bash
+pio test -e host -v
+```
+
+Current software validation result:
+
+```text
+18 passed
+0 failed
+```
+
+Upload the primary firmware:
+
+```bash
+pio run -e uno_r4_wifi -t upload
+```
+
+Upload the sniffer firmware:
+
+```bash
+pio run -e sniffer -t upload
 ```
 
 Open the serial monitor:
@@ -274,9 +328,45 @@ Default serial configuration:
 
 ---
 
-# Software Architecture
+## Current Software Architecture
 
-The firmware is divided into independent functional components.
+The current firmware foundation separates hardware access, control, safety, experiments, commands, and logging.
+
+```text
+             +-------------------+
+             | Command Interface |
+             +---------+---------+
+                       |
+                       v
+             +-------------------+
+             | Experiment Manager|
+             +---------+---------+
+                       |
+             +---------+---------+
+             |                   |
+             v                   v
+      +--------------+    +--------------+
+      |Safety Manager|    |    Logger    |
+      +------+-------+    +--------------+
+             |
+             v
+      +--------------+
+      |  CAN Driver  |
+      +------+-------+
+             |
+             v
+      +--------------+
+      | RA4M1 CAN HW |
+      +--------------+
+```
+
+Safety is enforced at the CAN driver boundary so higher-level components cannot transmit simply by bypassing experiment-state checks.
+
+---
+
+## Target Architecture
+
+After the CAN foundation has been validated on hardware, fuzzing strategies will be introduced behind the experiment layer.
 
 ```text
                  +-------------------+
@@ -293,37 +383,31 @@ The firmware is divided into independent functional components.
                v                       v
        +---------------+       +---------------+
        | Safety Manager|       |  Fuzz Engine  |
-       +---------------+       +-------+-------+
-                                       |
-                                       v
-                              +----------------+
-                              | Fuzz Strategies|
-                              +-------+--------+
-                                      |
-                                      v
-                              +----------------+
-                              |   CAN Driver   |
-                              +-------+--------+
-                                      |
-                                      v
-                              +----------------+
-                              | RA4M1 CAN HW   |
-                              +----------------+
+       +-------+-------+       +-------+-------+
+               |                       |
+               |                       v
+               |              +----------------+
+               |              | Fuzz Strategies|
+               |              +-------+--------+
+               |                      |
+               +----------+-----------+
+                          |
+                          v
+                  +---------------+
+                  |  CAN Driver   |
+                  +-------+-------+
+                          |
+                          v
+                  +---------------+
+                  | RA4M1 CAN HW  |
+                  +---------------+
 ```
 
-The CAN driver is responsible for hardware interaction.
-
-The experiment layer manages test execution.
-
-The safety manager controls whether active transmission is permitted.
-
-Future fuzzing strategies operate through the CAN abstraction rather than directly manipulating hardware.
-
-This separation is intended to make the project easier to test, maintain, and extend.
+The fuzz engine and fuzz strategies shown above represent **planned functionality**.
 
 ---
 
-# Safety Model
+## Safety Model
 
 CAN fuzzing can rapidly disrupt a CAN network.
 
@@ -335,7 +419,7 @@ The device must always boot into:
 SAFE
 ```
 
-The expected state machine is:
+The control model is:
 
 ```text
              BOOT
@@ -343,33 +427,38 @@ The expected state machine is:
                v
              SAFE
                |
-             arm
+              arm
                |
                v
             ARMED
                |
-            start
+             start
                |
                v
            RUNNING
                |
-             stop
+              stop
                |
                v
             ARMED
                |
-           disarm
+            disarm
                |
                v
              SAFE
+
+Runtime CAN fault
+       |
+       v
+     FAULT
 ```
 
 A test must never begin automatically after:
 
-* Power-on
-* Reset
-* Firmware upload
-* Serial reconnect
+- Power-on
+- Reset
+- Firmware upload
+- Serial reconnect
 
 A `start` command while the system is `SAFE` must be rejected.
 
@@ -381,164 +470,250 @@ Example:
 ERROR: DEVICE NOT ARMED
 ```
 
-Active experiments must support immediate termination.
+Active experiments support cancellation, and runtime CAN errors propagate into a latched FAULT condition.
+
+Safety checks are also enforced at the CAN transmit boundary.
 
 ---
 
-# Default CAN Configuration
+## Default CAN Configuration
 
-Initial development defaults:
+Initial development defaults include:
 
 ```text
 CAN bitrate:       500 kbps
 CAN format:        Classical CAN
-Identifier:        11-bit standard
+TX identifiers:    11-bit standard
 Boot state:        SAFE
 Serial:            115200 baud
 Automatic fuzzing: Disabled
 ```
 
-These values may become configurable as development progresses.
+Unsupported CAN bitrates are rejected.
+
+Extended-frame format is preserved during CAN reception, while the current transmit implementation intentionally remains limited to standard identifiers.
 
 ---
 
-# Command Interface
+## Command Interface
 
-The initial control interface uses USB serial.
+The current control interface uses USB serial.
 
-Planned command set:
+The interface provides commands for device state and experiment control.
 
-```text
-help
-status
-arm
-disarm
-start
-stop
-profile
-stats
-reset
-```
-
-Example:
+Representative interaction:
 
 ```text
 > status
 
-CAN CHAOS FUZZER
-
 STATE: SAFE
-CAN: ONLINE
-BITRATE: 500000
-TX: 0
-RX: 1242
-ERRORS: 0
-```
 
-Arming:
+> start
 
-```text
+ERROR: DEVICE NOT ARMED
+
 > arm
 
 STATE: ARMED
 ```
 
-Attempting to start without arming:
+Command parsing is bounded and rejects:
 
-```text
-> start
+- Oversized commands
+- Numeric overflow
+- Unsupported arguments
+- Malformed input
+- Invalid state transitions
 
-ERROR: DEVICE NOT ARMED
-```
-
-The serial protocol will eventually also provide the interface used by the Python host controller.
-
----
-
-# Milestone 1 — CAN Foundation
-
-The first milestone establishes the underlying CAN test platform.
-
-Required functionality:
-
-```text
-PlatformIO environment
-        ↓
-RA4M1 CAN initialization
-        ↓
-CAN transmission
-        ↓
-CAN reception
-        ↓
-Safety state machine
-        ↓
-Serial control
-        ↓
-Experiment foundation
-        ↓
-Logging foundation
-```
-
-Compilation alone does **not** constitute completion.
-
-Milestone 1 must be validated on an isolated CAN test bench.
+Serial processing is limited per main-loop iteration to prevent excessive command input from monopolizing firmware execution.
 
 ---
 
-# Milestone 1 Acceptance Test
+## Bounded Runtime Processing
 
-The following sequence must succeed:
+A fuzzing platform must remain controllable even when traffic and logging activity increase.
+
+The firmware therefore bounds several operations per main-loop iteration.
+
+This includes:
+
+- Serial input processing
+- CAN reception
+- Log output
+
+Logging uses a bounded buffer and tracks whole-line drops when output cannot keep up.
+
+This design is intended to prevent logging or input processing from starving safety-critical control behavior.
+
+---
+
+## CAN Transmission Safety
+
+CAN transmission is protected at the driver boundary.
+
+Current protections include:
+
+- SAFE-state rejection
+- State validation
+- Standard-ID validation
+- DLC validation
+- Supported bitrate validation
+- Transmission rate limiting
+- Runtime CAN error handling
+- Fault propagation
+
+The current development rate limit enforces at least one second between accepted transmissions.
+
+The rate limit is preserved across:
+
+- STOP / START
+- Counter reset
+- Experiment restart
+
+This intentionally conservative rate is used during foundation development and hardware bring-up.
+
+---
+
+## Software Validation
+
+The host-side test suite currently contains **18 passing tests**.
+
+Coverage includes:
+
+- Safety state transitions
+- Invalid state transitions
+- Command parsing
+- Malformed input rejection
+- Numeric overflow
+- Oversized commands
+- Experiment cancellation
+- Runtime faults
+- CAN fault propagation
+- Rate limiting
+- Timer wraparound
+- Counter behavior
+- Logger backpressure
+- Main-loop processing limits
+- CAN frame handling
+
+Validation performed:
 
 ```text
-PlatformIO build succeeds
-        ↓
-Firmware uploads to UNO R4
-        ↓
-UNO R4 boots SAFE
-        ↓
-"start" while SAFE is rejected
-        ↓
-User issues "arm"
-        ↓
-Device enters ARMED
-        ↓
-Known CAN frame is transmitted
-        ↓
+pio run -e uno_r4_wifi -t clean
+PASS
+
+pio run -e uno_r4_wifi -e sniffer
+PASS
+
+pio test -e host -v
+18 passed, 0 failed
+```
+
+Passing host tests do **not** replace physical CAN hardware validation.
+
+---
+
+## Milestone 1C — Hardware Acceptance
+
+The next development phase validates the software foundation against real CAN hardware.
+
+Planned bench:
+
+```text
+        CAN CHAOS FUZZER
+
+       Arduino UNO R4
+              |
+       SN65HVD230
+              |
+              |
+            CANH
+            CANL
+              |
+      =================
+         ISOLATED BUS
+      =================
+              |
+        +-----+-----+
+        |           |
+        v           v
+     Sniffer     Test Node
+```
+
+Required hardware acceptance sequence:
+
+```text
+Firmware builds
+       |
+       v
+Firmware uploads
+       |
+       v
+Device boots SAFE
+       |
+       v
+START while SAFE rejected
+       |
+       v
+ARM accepted
+       |
+       v
+Known CAN frame transmitted
+       |
+       v
 Independent sniffer observes frame
-        ↓
+       |
+       v
 ID / DLC / payload verified
-        ↓
-UNO R4 receives known CAN frame
-        ↓
-"stop" immediately stops transmission
-        ↓
-Device returns safely to SAFE
+       |
+       v
+Known CAN frame received
+       |
+       v
+STOP behavior verified
+       |
+       v
+CAN fault behavior verified
+       |
+       v
+Reset / reconnect returns SAFE
 ```
 
-Only after this test succeeds should development proceed to active fuzzing.
+Compilation alone does **not** constitute completion of Milestone 1.
 
 ---
 
-# Planned Fuzzing Capabilities
+## Known Hardware Validation Limitations
 
-## Random Frame Fuzzing
+Several behaviors cannot be fully established through host-side tests.
 
-Generate randomized:
+These include:
 
-* CAN IDs
-* DLC values
-* Payloads
-* Transmission intervals
+- Physical CAN electrical compatibility
+- Actual CAN TX/RX behavior
+- Physical bus fault behavior
+- Hardware CAN error callbacks
+- Reboot behavior
+- USB reconnect behavior
+- Absolute STOP latency
 
-Random fuzzing should support deterministic seeds so discovered behavior can be reproduced.
+Software cancellation prevents subsequent application-level writes after STOP or FAULT.
+
+However, a CAN frame already accepted by the hardware controller cannot be retracted.
+
+The currently pinned serial/UART implementation may also wait synchronously during some operations, so absolute STOP latency must be measured on hardware.
 
 ---
 
-## Known-ID Mutation
+## Planned Fuzzing Capabilities
 
-Given a legitimate CAN identifier, mutate its payload while preserving the identifier.
+Fuzzing strategies are intentionally deferred until completion of hardware acceptance.
 
-Planned mutation strategies:
+### Known-ID Payload Mutation
+
+The first planned fuzzing primitive will mutate the payload of a known CAN identifier.
+
+Planned mutations include:
 
 ```text
 Random payload
@@ -569,11 +744,50 @@ Mutated:
 
 ---
 
-# Timing Chaos
+## Deterministic Testing
 
-Many embedded systems depend on message timing even when CAN itself does not enforce application-level timing semantics.
+Fuzzing should be reproducible.
 
-The platform will support manipulation of:
+Future experiments will therefore support deterministic random seeds.
+
+Conceptually:
+
+```text
+Profile + Seed
+      |
+      v
+Mutation Sequence
+      |
+      v
+CAN Frames
+      |
+      v
+Target Behavior
+      |
+      v
+Evidence / Logs
+```
+
+The same profile and seed should generate the same mutation sequence.
+
+---
+
+## Random Frame Fuzzing
+
+Future random fuzzing will support controlled randomization of:
+
+- CAN IDs
+- DLC values
+- Payloads
+- Transmission intervals
+
+Random generation will remain subject to safety limits and experiment configuration.
+
+---
+
+## Timing Chaos
+
+Future timing experiments may manipulate:
 
 ```text
 Message period
@@ -604,24 +818,25 @@ Injected:
 286 ms
 ```
 
-The objective is to determine how the target handles violations of expected timing.
+The objective is to evaluate how a target behaves when application-level timing assumptions are violated.
 
 ---
 
-# Replay Testing
+## Replay Testing
 
-The platform will support recording and replaying CAN traffic.
+Future replay support will record and reproduce CAN traffic.
 
-A captured frame will contain:
+Captured frames may include:
 
 ```text
-Timestamp
+Relative timestamp
 CAN ID
+Frame format
 DLC
 Payload
 ```
 
-Planned replay modes:
+Planned replay modes include:
 
 ```text
 Single frame
@@ -632,41 +847,25 @@ Accelerated sequence
 Slowed sequence
 ```
 
-This can be used to evaluate whether systems improperly accept stale or repeated commands.
+Replay experiments can help evaluate whether systems improperly accept stale or repeated messages.
 
 ---
 
-# Arbitration Testing
+## Arbitration Testing
 
-CAN arbitration gives numerically lower identifiers higher priority.
+CAN arbitration gives numerically lower identifiers higher bus priority.
 
-The project will support controlled experiments involving high-priority traffic.
+Future experiments will evaluate the effects of controlled high-priority traffic on legitimate network communication.
 
-Example:
-
-```text
-Normal:
-
-0x500
-0x520
-0x700
-
-Test traffic:
-
-0x001
-```
-
-Experiments will evaluate whether higher-priority traffic affects the ability of legitimate nodes to transmit within expected timing constraints.
-
-These tests will be explicitly armed and rate limited.
+These tests will remain explicitly armed, rate limited, and constrained by experiment duration.
 
 ---
 
-# Bus Load Testing
+## Bus Load Testing
 
-The platform will eventually support controlled CAN load generation.
+Future releases may support controlled CAN load generation.
 
-Potential targets:
+Potential experiment targets include:
 
 ```text
 10%
@@ -676,7 +875,7 @@ Potential targets:
 90%
 ```
 
-The purpose is to identify degradation thresholds rather than simply transmitting at the maximum possible rate.
+The objective is to identify system degradation and recovery thresholds rather than simply transmit at the maximum possible rate.
 
 Measurements may include:
 
@@ -693,24 +892,24 @@ Recovery time
 
 ---
 
-# Target ECU Simulator
+## Target ECU Simulator
 
 A later milestone will introduce a dedicated target ECU simulator.
 
-The simulator will provide predictable CAN behavior so experiments can be reproduced without requiring production hardware.
+The simulator will provide deterministic behavior so experiments can be reproduced without requiring production equipment.
 
 Example message map:
 
-| CAN ID  | Function         |   Rate |
-| ------- | ---------------- | -----: |
+| CAN ID | Function | Rate |
+| --- | --- | ---: |
 | `0x100` | Controller State | 500 ms |
-| `0x120` | RPM              |  50 ms |
-| `0x130` | Temperature      | 250 ms |
-| `0x200` | Actuator Command |  Event |
-| `0x210` | Actuator Status  | 100 ms |
-| `0x700` | Heartbeat        | 100 ms |
+| `0x120` | RPM | 50 ms |
+| `0x130` | Temperature | 250 ms |
+| `0x200` | Actuator Command | Event |
+| `0x210` | Actuator Status | 100 ms |
+| `0x700` | Heartbeat | 100 ms |
 
-Example state machine:
+Example state model:
 
 ```text
 OFF
@@ -727,13 +926,22 @@ ACTIVE
  +------> FAULT
 ```
 
-The simulator will expose enough telemetry to determine how fuzzing affects application behavior.
+Target telemetry may eventually expose:
+
+- Heartbeat
+- Current state
+- Invalid-frame count
+- Error count
+- Reset count
+- Last valid command
+- Watchdog events
+- Unexpected-state count
 
 ---
 
-# Experiment Model
+## Experiment Model
 
-Experiments should follow a repeatable lifecycle:
+Future experiments are intended to follow a repeatable lifecycle:
 
 ```text
 Initialize
@@ -765,11 +973,11 @@ Store Results
 
 Stopping hostile traffic does not necessarily end an experiment.
 
-Recovery is part of the measurement.
+**Recovery is part of the measurement.**
 
 ---
 
-# Experiment Profiles
+## Experiment Profiles
 
 Experiments will eventually be configuration driven.
 
@@ -788,11 +996,13 @@ Example:
 }
 ```
 
-The seed allows generated test inputs to be reproduced.
+Profiles will be validated before execution.
+
+Invalid or unsafe configurations should fail closed rather than silently execute.
 
 ---
 
-# Observability
+## Observability
 
 The project is intended to measure target behavior rather than merely generate hostile traffic.
 
@@ -816,25 +1026,29 @@ The relationship of interest is:
 
 ```text
 Injected Input
-      ↓
+      |
+      v
 CAN Behavior
-      ↓
+      |
+      v
 Application Behavior
-      ↓
+      |
+      v
 System Impact
-      ↓
+      |
+      v
 Recovery
 ```
 
 ---
 
-# Recovery Testing
+## Recovery Testing
 
 A system temporarily entering a degraded state is different from a system remaining permanently unavailable.
 
 Recovery should therefore be explicitly measured.
 
-Potential metrics:
+Potential metrics include:
 
 ```text
 Time to heartbeat recovery
@@ -848,18 +1062,18 @@ Manual intervention required
 
 Example severity model:
 
-| Level | Result                                |
-| ----- | ------------------------------------- |
-| 0     | No observable impact                  |
-| 1     | Temporary degradation                 |
-| 2     | Automatic recovery required           |
-| 3     | Component reset required              |
-| 4     | Manual intervention required          |
-| 5     | Persistent unsafe or unexpected state |
+| Level | Result |
+| ---: | --- |
+| 0 | No observable impact |
+| 1 | Temporary degradation |
+| 2 | Automatic recovery required |
+| 3 | Component reset required |
+| 4 | Manual intervention required |
+| 5 | Persistent unsafe or unexpected state |
 
 ---
 
-# Host-Side Tooling
+## Host-Side Tooling
 
 A future Python host application will provide experiment orchestration.
 
@@ -877,7 +1091,7 @@ canchaos run profiles/rpm_mutation.json
 canchaos analyze results/CAN-2026-09-06-0042/
 ```
 
-Initial communication will use USB serial.
+Initial host-to-device communication will use USB serial.
 
 Future interfaces may include:
 
@@ -888,11 +1102,15 @@ WiFi
 REST API
 ```
 
+Network-facing control interfaces are **not currently implemented**.
+
+Any future remote-control capability will require additional security analysis and controls before implementation.
+
 ---
 
-# Linux / SocketCAN Integration
+## Linux / SocketCAN Integration
 
-Linux will eventually provide independent CAN monitoring and experiment capture.
+Linux may eventually provide independent CAN monitoring and experiment capture.
 
 Potential tooling includes:
 
@@ -926,41 +1144,43 @@ Long-term architecture:
 
 This provides separation between:
 
-* Attack generation
-* Monitoring
-* Target behavior
+- Attack generation
+- Monitoring
+- Target behavior
 
 ---
 
-# Aerospace / Embedded Context
+## Security Considerations
 
-CAN is used across automotive, industrial, robotics, aerospace, and other embedded systems.
+The repository is intended to remain safe for public development.
 
-This project is not intended to model one specific vehicle or platform.
+Current project practices include:
 
-However, the testing methodology is particularly relevant to systems where CAN communication participates in:
+- No hard-coded credentials
+- No API keys required by the firmware
+- No network-facing API in the current implementation
+- No default passwords
+- No WiFi credentials stored in firmware
+- Local USB serial control
+- Explicit SAFE boot state
+- Explicit ARM requirement
+- Driver-level transmit safety enforcement
+- Bounded command processing
+- Bounded logging
+- Runtime fault propagation
+- Repository exclusions for local secrets and generated artifacts
 
-* Distributed control
-* Sensor communication
-* Actuator control
-* Subsystem coordination
-* Health/status reporting
+Sensitive local files such as environment files, credentials, private keys, logs, captures, and experiment output should not be committed.
 
-The repository includes additional documentation exploring relationships to CANaerospace and ARINC 825-style environments.
-
-See:
-
-```text
-docs/aerospace-mapping.md
-```
+Future network-facing interfaces will require their own threat model before being enabled.
 
 ---
 
-# Threat Model
+## Threat Model
 
-The project assumes a test scenario in which a node capable of transmitting onto the CAN network is compromised, malfunctioning, malicious, or intentionally acting as an adversarial test device.
+The project assumes a laboratory scenario in which a node capable of transmitting onto the CAN network is compromised, malfunctioning, malicious, or intentionally acting as an adversarial test device.
 
-The project is therefore primarily interested in **post-bus-access resilience**.
+The project is primarily interested in **post-bus-access resilience**.
 
 Questions include:
 
@@ -981,6 +1201,8 @@ Can traffic cause unexpected state transitions?
 
 Can malformed traffic degrade availability?
 
+Can the system detect the condition?
+
 Can the system recover?
 ```
 
@@ -992,70 +1214,122 @@ docs/threat-model.md
 
 ---
 
-# Roadmap
+## Aerospace and Embedded Context
 
-## v0.1 — CAN Foundation
+CAN is used across automotive, industrial, robotics, aerospace, and other embedded systems.
 
-* [ ] PlatformIO environment
-* [ ] Native RA4M1 CAN
-* [ ] TX/RX
-* [ ] SAFE/ARMED state machine
-* [ ] Serial command interface
-* [ ] Hardware validation
+This project is not intended to model one specific vehicle, aircraft, or production platform.
 
-## v0.2 — Core Fuzzer
+The methodology is particularly relevant to systems where CAN communication participates in:
 
-* [ ] Random CAN fuzzing
-* [ ] Known-ID mutation
-* [ ] Mutation strategies
-* [ ] Deterministic seeds
-* [ ] Experiment duration
+- Distributed control
+- Sensor communication
+- Actuator control
+- Subsystem coordination
+- Health/status reporting
 
-## v0.3 — Chaos Engine
+The repository includes additional documentation exploring relationships to aerospace and embedded CAN environments.
 
-* [ ] Timing jitter
-* [ ] Bursts
-* [ ] Replay
-* [ ] Arbitration testing
-* [ ] Controlled load generation
+See:
 
-## v0.4 — Target ECU
-
-* [ ] Target simulator
-* [ ] CAN message map
-* [ ] State machine
-* [ ] Health telemetry
-* [ ] Fault/recovery behavior
-
-## v0.5 — Instrumentation
-
-* [ ] Experiment IDs
-* [ ] Structured logging
-* [ ] Baseline capture
-* [ ] Recovery measurement
-* [ ] Result summaries
-
-## v0.6 — Host Controller
-
-* [ ] Python CLI
-* [ ] Experiment profiles
-* [ ] Automated execution
-* [ ] Capture management
-* [ ] Result analysis
-
-## v1.0 — CAN Security Test Platform
-
-* [ ] Reproducible experiments
-* [ ] Defined test cases
-* [ ] Independent monitoring
-* [ ] Evidence capture
-* [ ] Resilience metrics
-* [ ] Recovery analysis
-* [ ] Complete documentation
+```text
+docs/aerospace-mapping.md
+```
 
 ---
 
-# Future Ideas
+## Roadmap
+
+### Milestone 1A — Software Foundation
+
+- [x] PlatformIO environment
+- [x] Pinned toolchain
+- [x] Modular firmware
+- [x] Native RA4M1 CAN abstraction
+- [x] Separate sniffer target
+
+### Milestone 1B — Control and Safety Validation
+
+- [x] SAFE / ARMED / RUNNING / FAULT model
+- [x] Serial command validation
+- [x] Driver-level safety enforcement
+- [x] Runtime fault propagation
+- [x] Bounded processing
+- [x] Buffered logging
+- [x] Rate limiting
+- [x] Host test infrastructure
+- [x] 18 host tests passing
+
+### Milestone 1C — Hardware Acceptance
+
+- [ ] Physical CAN bench
+- [ ] Firmware upload
+- [ ] SAFE-on-boot verification
+- [ ] Known-frame TX
+- [ ] Known-frame RX
+- [ ] Independent sniffer validation
+- [ ] Hardware fault validation
+- [ ] STOP latency measurement
+- [ ] Reset/reconnect testing
+
+### Milestone 2 — Core Fuzzer
+
+- [ ] Known-ID payload mutation
+- [ ] Mutation strategies
+- [ ] Deterministic seeds
+- [ ] Random frame fuzzing
+- [ ] Experiment configuration
+- [ ] Experiment duration
+- [ ] Per-frame evidence logging
+
+### Milestone 3 — Chaos Engine
+
+- [ ] Timing jitter
+- [ ] Bursts
+- [ ] Replay
+- [ ] Arbitration experiments
+- [ ] Controlled load generation
+
+### Milestone 4 — Target ECU
+
+- [ ] Target simulator
+- [ ] CAN message map
+- [ ] Application state machine
+- [ ] Health telemetry
+- [ ] Fault behavior
+- [ ] Recovery behavior
+
+### Milestone 5 — Instrumentation
+
+- [ ] Experiment IDs
+- [ ] Structured logging
+- [ ] Baseline capture
+- [ ] Recovery measurement
+- [ ] Result summaries
+- [ ] Baseline comparison
+
+### Milestone 6 — Host Controller
+
+- [ ] Python CLI
+- [ ] Experiment profiles
+- [ ] Automated execution
+- [ ] Capture management
+- [ ] Result analysis
+
+### v1.0 — CAN Security Test Platform
+
+- [ ] Reproducible experiments
+- [ ] Defined test cases
+- [ ] Independent monitoring
+- [ ] Evidence capture
+- [ ] Resilience metrics
+- [ ] Recovery analysis
+- [ ] Complete documentation
+- [ ] Reproducible build
+
+---
+
+## Future Ideas
 
 Potential future expansion includes:
 
@@ -1077,21 +1351,21 @@ CI-connected hardware testing
 
 These features are intentionally outside the initial development scope.
 
-The immediate priority is building a reliable, observable, and reproducible CAN security testing foundation.
+The immediate priority is building a **reliable, observable, safe, and reproducible CAN security testing foundation**.
 
 ---
 
-# Responsible Use
+## Responsible Use
 
 CAN Chaos Fuzzer is intended for:
 
-* Security research
-* Embedded systems testing
-* Hardware-in-the-loop laboratories
-* Authorized penetration testing
-* Security verification
-* Resilience testing
-* Education
+- Security research
+- Embedded systems testing
+- Hardware-in-the-loop laboratories
+- Authorized penetration testing
+- Security verification
+- Resilience testing
+- Education
 
 CAN fuzzing can disrupt communications, trigger unexpected behavior, or render connected systems unavailable.
 
@@ -1101,19 +1375,19 @@ Development and testing should be performed on isolated laboratory CAN networks 
 
 ---
 
-# License
+## License
 
 See `LICENSE` for project licensing information.
 
 ---
 
-# Project Philosophy
+## Project Philosophy
 
 Traditional verification often asks:
 
 > **Does the system behave correctly when given the expected input?**
 
-Security testing adds another question:
+Security verification adds another question:
 
 > **What happens when we intentionally violate those expectations?**
 
