@@ -1,11 +1,11 @@
 #include <Arduino.h>
-#include <CAN.h>
+#include <Arduino_CAN.h>
 
 void setup() {
   Serial.begin(115200);
-  while (!Serial) {}
+  delay(300);
 
-  if (!CAN.begin(500E3)) {
+  if (!CAN.begin(CanBitRate::BR_500k)) {
     Serial.println("CAN init failed!");
     while (1) { delay(1000); }
   }
@@ -13,20 +13,19 @@ void setup() {
 }
 
 void loop() {
-  int packetSize = CAN.parsePacket();
-  if (packetSize) {
-    bool ext = CAN.packetExtended();
-    uint32_t id = CAN.packetId();
+  if (CAN.available()) {
+    CanMsg const msg = CAN.read();
+    uint32_t const id = msg.isStandardId() ? msg.getStandardId() : msg.getExtendedId();
 
     Serial.print("ID: 0x");
     Serial.print(id, HEX);
-    if (ext) Serial.print(" (EXT)");
+    if (!msg.isStandardId()) Serial.print(" (EXT)");
     Serial.print(" DLC: ");
-    Serial.print(packetSize);
+    Serial.print(msg.data_length);
     Serial.print(" Data: ");
 
-    while (CAN.available()) {
-      byte b = CAN.read();
+    for (uint8_t i = 0; i < msg.data_length && i < 8; ++i) {
+      byte const b = msg.data[i];
       if (b < 0x10) Serial.print("0");
       Serial.print(b, HEX);
       Serial.print(" ");

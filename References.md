@@ -1,24 +1,22 @@
-## 📖 References & Further Reading
+# References & Further Reading
 
-### CAN Protocol & Standards
-- Bosch CAN Specification v2.0 — Original Controller Area Network definition (frame structure, arbitration, error handling).
-- ISO 11898-1:2015 — CAN data link layer and physical signaling standard.
-- ISO 11898-2 — High-speed CAN physical layer (relevant to SN65HVD230).
-- ARINC 825 — General standard for CAN bus protocol in airborne use.
-- CANaerospace Specification — Avionics-oriented deterministic CAN protocol.
+## CAN Protocol & Standards
 
-### Security Research & Offensive Studies
-- Koscher, K., et al. (2010). Experimental Security Analysis of a Modern Automobile. IEEE S&P.
-- Miller, C. & Valasek, C. (2015). Remote Exploitation of an Unaltered Passenger Vehicle.
-- NCC Group. Car Hacking: CAN Bus Attacks Explained.
-- Checkoway, S., et al. (2011). Comprehensive Experimental Analyses of Automotive Attack Surfaces. USENIX Security.
+- Bosch CAN Specification v2.0: original Controller Area Network definition.
+- ISO 11898-1: CAN data link layer and physical signaling.
+- ISO 11898-2: high-speed CAN physical layer.
+- ARINC 825: CAN bus protocol use in airborne systems.
+- CANaerospace Specification: deterministic avionics-oriented CAN protocol.
 
-### Aerospace & Defense Context
-- NASA Technical Reports — fault injection, bus robustness, cyber-physical resilience in avionics.
-- MIL-STD-1553 — deterministic bus used in A&D; attack/fault-injection concepts apply similarly.
-- DO-326A / ED-202A — Airworthiness Security Process Specification (FAA/EASA).
+## Security Research
 
-### Safety & Cybersecurity Guidance
-- SAE J3061. Cybersecurity Guidebook for Cyber-Physical Vehicle Systems.
-- NIST SP 800-160 Vol. 2. Developing Cyber Resilient Systems.
-- FAA AC 20-115D, AC 20-42D. Software assurance and comms guidance.
+- Koscher et al., "Experimental Security Analysis of a Modern Automobile", IEEE S&P, 2010.
+- Checkoway et al., "Comprehensive Experimental Analyses of Automotive Attack Surfaces", USENIX Security, 2011.
+- Miller and Valasek, "Remote Exploitation of an Unaltered Passenger Vehicle", 2015.
+- NCC Group, "Car Hacking: CAN Bus Attacks Explained".
+
+## Safety & Cybersecurity Guidance
+
+- SAE J3061: Cybersecurity Guidebook for Cyber-Physical Vehicle Systems.
+- NIST SP 800-160 Vol. 2: Developing Cyber Resilient Systems.
+- DO-326A / ED-202A: Airworthiness Security Process Specification.

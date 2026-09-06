@@ -1,13 +1,14 @@
-# Sniffer Node (UNO R4 WiFi + SN65HVD230)
+# Sniffer Node
 
-Minimal receive-only sketch for a second node so you can observe CAN traffic from the fuzzer.
+`sniffer.ino` is a minimal receive-only sketch for a second UNO R4 WiFi node so you can observe CAN traffic from the fuzzer.
 
-## Wiring (same as fuzzer)
-- UNO R4 WiFi **3.3V** → SN65HVD230 **VCC**
-- UNO R4 WiFi **GND** → SN65HVD230 **GND**
-- UNO R4 WiFi **D2 (CAN TX)** → SN65 **TXD (D)**
-- UNO R4 WiFi **D3 (CAN RX)** → SN65 **RXD (R)**
-- SN65 **RS** → **GND** (high-speed mode)
-- Bus ends terminated with **120Ω** across CANH–CANL.
+## Wiring
 
-Open Serial Monitor at **115200** baud to see frames.
+- UNO R4 WiFi 3.3V -> SN65HVD230 VCC
+- UNO R4 WiFi GND -> SN65HVD230 GND
+- UNO R4 WiFi D2 / CAN TX -> SN65HVD230 TXD / D
+- UNO R4 WiFi D3 / CAN RX -> SN65HVD230 RXD / R
+- SN65HVD230 RS -> GND for high-speed mode
+- Bus ends terminated with 120 ohm across CANH/CANL
+
+Open Serial Monitor at 115200 baud. During the Milestone 1 known-frame demo, expect standard ID `0x123` and payloads beginning with `CA FE 00 01`.
