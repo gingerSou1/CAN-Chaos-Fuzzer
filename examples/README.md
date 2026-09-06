@@ -2,6 +2,27 @@
 
 `sniffer.ino` is a minimal receive-only sketch for a second UNO R4 WiFi node so you can observe CAN traffic from the fuzzer.
 
+Build it independently with PlatformIO:
+
+```bash
+pio run -e sniffer
+```
+
+To upload, explicitly select the **second board's** port:
+
+```bash
+pio run -e sniffer -t upload --upload-port COM_REPLACE_ME
+pio device monitor -p COM_REPLACE_ME -b 115200
+```
+
+`src/sniffer_main.cpp` includes the existing sketch. Source filters ensure that
+each target has only its own setup/loop; plain `pio run` still builds only
+`uno_r4_wifi`. The sketch can also be used in an Arduino IDE sketch folder named
+`sniffer`, with the matching Renesas UNO core installed.
+
+Receive-only describes application behavior; the sketch does not configure
+hardware listen-only mode and may participate in CAN acknowledgments/error signaling.
+
 ## Wiring
 
 - UNO R4 WiFi 3.3V -> SN65HVD230 VCC

@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 #include <Arduino_CAN.h>
+#include "config.h"
 
 namespace canchaos {
 
@@ -22,9 +23,15 @@ CanBitRate toCanBitRate(uint32_t bitrate) {
 }  // namespace
 
 bool CanDriver::begin(uint32_t bitrate) {
+  if (status_ != CanStatus::Offline || safety_.state() == SafetyState::Fault) return false;
+  // Validate before touching the hardware; never silently substitute a bitrate.
+  if (bitrate != 125000UL && bitrate != 250000UL && bitrate != 500000UL) {
+    return false;
+  }
   if (!CAN.begin(toCanBitRate(bitrate))) {
     bitrate_ = 0;
     status_ = CanStatus::Error;
+    safety_.fault();
     return false;
   }
 
@@ -34,23 +41,51 @@ bool CanDriver::begin(uint32_t bitrate) {
 }
 
 bool CanDriver::send(const CanFrame& frame) {
-  if (status_ != CanStatus::Online || frame.length > 8 || frame.id > 0x7FFUL) {
+  pollHealth();
+  if (!safety_.canTransmit() || status_ != CanStatus::Online || frame.extended ||
+      frame.length > 8 || frame.id > 0x7FFUL) {
     stats_.txErrors++;
     stats_.lastWriteResult = -1;
     return false;
   }
 
+  uint32_t const nowMs = millis();
+  if (hasAcceptedTx_ && (nowMs - lastAcceptedTxMs_) < kMinTxIntervalMs) {
+    ++stats_.txRateLimited;
+    return false;
+  }
   CanMsg const msg(CanStandardId(frame.id), frame.length, frame.data);
   int const rc = CAN.write(msg);
   stats_.lastWriteResult = rc;
 
   if (rc == 1) {
+    // ArduinoCore-renesas 1.6.0: 1 means R_CAN_Write accepted the frame.
+    // This is not an independently confirmed on-bus transmission.
     stats_.txFrames++;
+    hasAcceptedTx_ = true;
+    lastAcceptedTxMs_ = nowMs;
     return true;
   }
 
   stats_.txErrors++;
+  status_ = CanStatus::Error;
+  safety_.fault();
   return false;
+}
+
+void CanDriver::pollHealth() {
+  int error = 0;
+  if (status_ == CanStatus::Online && CAN.isError(error)) {
+    lastControllerError_ = error;
+    stats_.controllerErrors++;
+    status_ = CanStatus::Error;
+    safety_.fault();
+  }
+}
+
+void CanDriver::resetStats() {
+  stats_ = CanDriverStats{};
+  if (status_ != CanStatus::Error) lastControllerError_ = 0;
 }
 
 bool CanDriver::receive(CanFrame& frame) {
@@ -59,6 +94,7 @@ bool CanDriver::receive(CanFrame& frame) {
   }
 
   CanMsg const msg = CAN.read();
+  frame.extended = !msg.isStandardId();
   frame.id = msg.isStandardId() ? msg.getStandardId() : msg.getExtendedId();
   frame.length = msg.data_length > 8 ? 8 : msg.data_length;
   for (uint8_t i = 0; i < frame.length; ++i) {

@@ -9,8 +9,8 @@
 
 using namespace canchaos;
 
-CanDriver canDriver;
 SafetyManager safety;
+CanDriver canDriver(safety);
 ExperimentManager experiment(canDriver, safety);
 Logger logger(Serial);
 CommandInterface commandInterface(Serial, safety, canDriver, experiment, logger);
@@ -33,12 +33,15 @@ void setup() {
 }
 
 void loop() {
-  uint32_t const nowMs = millis();
-  commandInterface.poll(nowMs);
-  experiment.update(nowMs);
+  canDriver.pollHealth();
+  // Reconcile a fault before processing commands that report experiment counters.
+  if (safety.state() == SafetyState::Fault) experiment.stop();
+  commandInterface.poll(millis());
+  experiment.update(millis());
 
   CanFrame frame;
-  while (canDriver.receive(frame)) {
+  for (uint8_t received = 0; received < kCanRxFramesPerLoop && canDriver.receive(frame); ++received) {
     logger.frameRx(frame);
   }
+  logger.poll();
 }

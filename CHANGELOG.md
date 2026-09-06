@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Establish and pin the UNO R4 WiFi PlatformIO/Arduino build baseline; add a
+  separately filtered sniffer environment.
+- Verify Arduino_CAN 1.6.0 core write semantics (1 is success), expose error state
+  and accepted-write counters, and preserve extended RX format.
+- Harden command boundaries, whitespace, integer overflow and argument counts.
+- Gate writes by safety state, latch runtime faults, cancel experiments on loss
+  of permission and consistently reset non-faulted counters.
+- Bound serial/RX/log work and restrict the known-frame demo to low-rate intervals.
+- Add native control/safety tests and document remaining hardware acceptance.
+
 - Convert repository to a PlatformIO-based Milestone 1 firmware layout.
 - Add CAN driver abstraction for the UNO R4 WiFi native CAN controller.
 - Add SAFE/ARMED/RUNNING/FAULT safety state handling.

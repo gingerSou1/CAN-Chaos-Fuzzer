@@ -12,6 +12,7 @@ struct ExperimentStats {
   uint32_t completed = 0;
   uint32_t stopped = 0;
   uint32_t rejectedStarts = 0;
+  uint32_t faulted = 0;
   uint32_t knownFramesSent = 0;
 };
 

@@ -3,7 +3,9 @@
 namespace canchaos {
 
 void SafetyManager::begin() {
-  state_ = SafetyState::Safe;
+  if (state_ == SafetyState::Boot) {
+    state_ = SafetyState::Safe;
+  }
 }
 
 bool SafetyManager::arm() {
@@ -15,7 +17,8 @@ bool SafetyManager::arm() {
 }
 
 bool SafetyManager::disarm() {
-  if (state_ == SafetyState::Running || state_ == SafetyState::Fault) {
+  if (state_ != SafetyState::Safe && state_ != SafetyState::Armed &&
+      state_ != SafetyState::Running) {
     return false;
   }
   state_ = SafetyState::Safe;

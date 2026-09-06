@@ -12,30 +12,38 @@ CommandInterface::CommandInterface(Stream& serial, SafetyManager& safety, CanDri
 
 void CommandInterface::begin() {
   length_ = 0;
+  discarding_ = false;
   buffer_[0] = '\0';
   logger_.help();
 }
 
 void CommandInterface::poll(uint32_t nowMs) {
-  while (serial_.available()) {
-    char const c = static_cast<char>(serial_.read());
-    if (c == '\r') {
-      continue;
-    }
+  for (uint8_t consumed = 0; consumed < kSerialBytesPerLoop && serial_.available(); ++consumed) {
+    int const input = serial_.read();
+    if (input < 0) break;
+    char const c = static_cast<char>(input);
     if (c == '\n') {
       buffer_[length_] = '\0';
-      trimLine(buffer_);
-      if (length_ > 0) {
+      if (!discarding_ && length_ > 0) {
         handleLine(buffer_, nowMs);
       }
       length_ = 0;
+      discarding_ = false;
       buffer_[0] = '\0';
+      // One complete line per poll. Commands following STOP wait until next loop.
+      return;
+    }
+    if (discarding_) continue;
+    if ((input < 32 && c != '\t' && c != '\r' && c != '\v' && c != '\f') || input > 126) {
+      discarding_ = true;
+      logger_.error(F("INVALID COMMAND CHARACTER"));
       continue;
     }
     if (length_ < (sizeof(buffer_) - 1)) {
       buffer_[length_++] = c;
     } else {
       length_ = 0;
+      discarding_ = true;
       buffer_[0] = '\0';
       logger_.error(F("COMMAND TOO LONG"));
     }
@@ -43,19 +51,24 @@ void CommandInterface::poll(uint32_t nowMs) {
 }
 
 void CommandInterface::handleLine(char* line, uint32_t nowMs) {
-  char* command = strtok(line, " ");
-  char* arg1 = strtok(nullptr, " ");
-  char* arg2 = strtok(nullptr, " ");
+  char* command = strtok(line, " \t\r\v\f");
+  char* arg1 = strtok(nullptr, " \t\r\v\f");
+  char* arg2 = strtok(nullptr, " \t\r\v\f");
+  char* extra = strtok(nullptr, " \t\r\v\f");
 
   if (command == nullptr) {
     return;
   }
+  if (extra != nullptr || (strcmp(command, "start") != 0 && arg1 != nullptr)) {
+    logger_.error(F("UNEXPECTED ARGUMENT"));
+    return;
+  }
 
   if (strcmp(command, "status") == 0) {
-    logger_.status(safety_.state(), can_.bitrate(), can_.stats(), experiment_.active(),
-                   experiment_.remainingMs(nowMs));
+    logger_.status(safety_.state(), can_, experiment_, nowMs);
   } else if (strcmp(command, "arm") == 0) {
-    if (safety_.arm()) {
+    can_.pollHealth();
+    if (can_.status() == CanStatus::Online && safety_.arm()) {
       logger_.ok(F("STATE ARMED"));
     } else {
       logger_.error(F("ARM REJECTED"));
@@ -87,12 +100,13 @@ void CommandInterface::handleLine(char* line, uint32_t nowMs) {
     experiment_.stop();
     logger_.ok(F("EXPERIMENT STOPPED"));
   } else if (strcmp(command, "stats") == 0) {
-    logger_.status(safety_.state(), can_.bitrate(), can_.stats(), experiment_.active(),
-                   experiment_.remainingMs(nowMs));
+    logger_.status(safety_.state(), can_, experiment_, nowMs);
   } else if (strcmp(command, "reset") == 0) {
     experiment_.stop();
-    experiment_.resetStats();
     if (safety_.disarm()) {
+      experiment_.resetStats();
+      can_.resetStats();
+      logger_.resetStats();
       logger_.ok(F("CONTROL STATE RESET TO SAFE"));
     } else {
       logger_.error(F("RESET REJECTED IN FAULT"));
@@ -101,20 +115,6 @@ void CommandInterface::handleLine(char* line, uint32_t nowMs) {
     logger_.help();
   } else {
     logger_.error(F("UNKNOWN COMMAND"));
-  }
-}
-
-void CommandInterface::trimLine(char* line) {
-  while (length_ > 0 && (line[length_ - 1] == ' ' || line[length_ - 1] == '\t')) {
-    line[--length_] = '\0';
-  }
-  uint8_t leading = 0;
-  while (line[leading] == ' ' || line[leading] == '\t') {
-    leading++;
-  }
-  if (leading > 0) {
-    memmove(line, line + leading, length_ - leading + 1);
-    length_ -= leading;
   }
 }
 
@@ -128,7 +128,9 @@ bool CommandInterface::parseUnsigned(const char* text, uint32_t& value) const {
     if (text[i] < '0' || text[i] > '9') {
       return false;
     }
-    parsed = (parsed * 10UL) + static_cast<uint32_t>(text[i] - '0');
+    uint32_t const digit = static_cast<uint32_t>(text[i] - '0');
+    if (parsed > (UINT32_MAX - digit) / 10U) return false;
+    parsed = (parsed * 10U) + digit;
   }
 
   value = parsed;

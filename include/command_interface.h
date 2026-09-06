@@ -19,7 +19,6 @@ class CommandInterface {
 
  private:
   void handleLine(char* line, uint32_t nowMs);
-  void trimLine(char* line);
   bool parseUnsigned(const char* text, uint32_t& value) const;
 
   Stream& serial_;
@@ -29,6 +28,7 @@ class CommandInterface {
   Logger& logger_;
   char buffer_[80] = {0};
   uint8_t length_ = 0;
+  bool discarding_ = false;
 };
 
 }  // namespace canchaos

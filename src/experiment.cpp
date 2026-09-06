@@ -7,7 +7,10 @@ namespace canchaos {
 ExperimentManager::ExperimentManager(CanDriver& can, SafetyManager& safety) : can_(can), safety_(safety) {}
 
 bool ExperimentManager::startKnownFrameDemo(uint32_t nowMs, uint32_t durationMs, uint32_t intervalMs) {
-  if (durationMs == 0 || durationMs > kMaxExperimentDurationMs || intervalMs == 0) {
+  can_.pollHealth();
+  if (active_ || can_.status() != CanStatus::Online || durationMs == 0 ||
+      durationMs > kMaxExperimentDurationMs || intervalMs < kMinTxIntervalMs ||
+      intervalMs > kMaxExperimentDurationMs) {
     stats_.rejectedStarts++;
     return false;
   }
@@ -30,13 +33,21 @@ bool ExperimentManager::startKnownFrameDemo(uint32_t nowMs, uint32_t durationMs,
 void ExperimentManager::stop() {
   if (active_) {
     active_ = false;
-    stats_.stopped++;
+    if (safety_.state() == SafetyState::Fault) {
+      stats_.faulted++;
+    } else {
+      stats_.stopped++;
+    }
   }
   (void)safety_.stop();
 }
 
 void ExperimentManager::update(uint32_t nowMs) {
-  if (!active_ || !safety_.canTransmit()) {
+  can_.pollHealth();
+  if (active_ && !safety_.canTransmit()) {
+    stop();
+  }
+  if (!active_) {
     return;
   }
 
@@ -52,6 +63,8 @@ void ExperimentManager::update(uint32_t nowMs) {
     if (can_.send(frame)) {
       stats_.knownFramesSent++;
       sequence_++;
+    } else if (safety_.state() == SafetyState::Fault) {
+      stop();
     }
     lastTxMs_ = nowMs;
   }
@@ -62,11 +75,11 @@ void ExperimentManager::resetStats() {
 }
 
 bool ExperimentManager::active() const {
-  return active_;
+  return active_ && safety_.canTransmit();
 }
 
 uint32_t ExperimentManager::remainingMs(uint32_t nowMs) const {
-  if (!active_ || (nowMs - startedAtMs_) >= durationMs_) {
+  if (!active() || (nowMs - startedAtMs_) >= durationMs_) {
     return 0;
   }
   return durationMs_ - (nowMs - startedAtMs_);
