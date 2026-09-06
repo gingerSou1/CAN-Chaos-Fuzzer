@@ -1,3 +1,9 @@
+// SPDX-License-Identifier: MIT
+/**
+ * @file
+ * @brief Arduino_CAN adapter with state and rate checks at the write boundary.
+ */
+
 #include "can_driver.h"
 
 #include <Arduino.h>
@@ -23,7 +29,9 @@ CanBitRate toCanBitRate(uint32_t bitrate) {
 }  // namespace
 
 bool CanDriver::begin(uint32_t bitrate) {
-  if (status_ != CanStatus::Offline || safety_.state() == SafetyState::Fault) return false;
+  if (status_ != CanStatus::Offline || safety_.state() == SafetyState::Fault) {
+    return false;
+  }
   // Validate before touching the hardware; never silently substitute a bitrate.
   if (bitrate != 125000UL && bitrate != 250000UL && bitrate != 500000UL) {
     return false;
@@ -85,7 +93,9 @@ void CanDriver::pollHealth() {
 
 void CanDriver::resetStats() {
   stats_ = CanDriverStats{};
-  if (status_ != CanStatus::Error) lastControllerError_ = 0;
+  if (status_ != CanStatus::Error) {
+    lastControllerError_ = 0;
+  }
 }
 
 bool CanDriver::receive(CanFrame& frame) {
@@ -108,16 +118,10 @@ bool CanDriver::receive(CanFrame& frame) {
   return true;
 }
 
-CanStatus CanDriver::status() const {
-  return status_;
-}
+CanStatus CanDriver::status() const { return status_; }
 
-const CanDriverStats& CanDriver::stats() const {
-  return stats_;
-}
+const CanDriverStats& CanDriver::stats() const { return stats_; }
 
-uint32_t CanDriver::bitrate() const {
-  return bitrate_;
-}
+uint32_t CanDriver::bitrate() const { return bitrate_; }
 
 }  // namespace canchaos

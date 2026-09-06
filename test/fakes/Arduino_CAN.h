@@ -1,9 +1,18 @@
+// SPDX-License-Identifier: MIT
+/**
+ * @file
+ * @brief Host CAN API double for control and failure-path tests.
+ */
+
 #pragma once
 #include "Arduino.h"
 #include <algorithm>
 
 enum class CanBitRate { BR_125k = 125000, BR_250k = 250000, BR_500k = 500000 };
-struct FakeCanId { uint32_t value; bool extended; };
+struct FakeCanId {
+  uint32_t value;
+  bool extended;
+};
 inline FakeCanId CanStandardId(uint32_t value) { return {value, false}; }
 inline FakeCanId CanExtendedId(uint32_t value) { return {value, true}; }
 struct CanMsg {
@@ -20,7 +29,7 @@ struct CanMsg {
 class FakeCAN {
  public:
   bool beginResult = true;
-  int writeResult = 1; // Verified R7FA4M1_CAN::write contract in core 1.6.0.
+  int writeResult = 1;  // Verified R7FA4M1_CAN::write contract in core 1.6.0.
   bool error = false;
   int errorCode = 0;
   unsigned beginCalls = 0;
@@ -29,10 +38,28 @@ class FakeCAN {
   uint32_t bitrate = 0;
   std::deque<CanMsg> rx;
   std::deque<CanMsg> tx;
-  bool begin(CanBitRate value) { ++beginCalls; bitrate = static_cast<uint32_t>(value); return beginResult; }
-  int write(const CanMsg& msg) { ++writeCalls; if (writeResult == 1) tx.push_back(msg); return writeResult; }
-  bool isError(int& code) const { code = errorCode; return error; }
+  bool begin(CanBitRate value) {
+    ++beginCalls;
+    bitrate = static_cast<uint32_t>(value);
+    return beginResult;
+  }
+  int write(const CanMsg& msg) {
+    ++writeCalls;
+    if (writeResult == 1) {
+      tx.push_back(msg);
+    }
+    return writeResult;
+  }
+  bool isError(int& code) const {
+    code = errorCode;
+    return error;
+  }
   size_t available() const { return rx.size(); }
-  CanMsg read() { ++readCalls; auto msg = rx.front(); rx.pop_front(); return msg; }
+  CanMsg read() {
+    ++readCalls;
+    auto msg = rx.front();
+    rx.pop_front();
+    return msg;
+  }
 };
 inline FakeCAN CAN;

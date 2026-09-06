@@ -1,0 +1,11 @@
+* text=auto
+*.cpp text eol=lf
+*.h text eol=lf
+*.ino text eol=lf
+*.py text eol=lf
+*.md text eol=lf
+*.ini text eol=lf
+*.json text eol=lf
+.clang-format text eol=lf
+.editorconfig text eol=lf
+.gitattributes text eol=lf

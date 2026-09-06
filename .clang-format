@@ -1,0 +1,11 @@
+# Project-owned C/C++ only; validated with clang-format 20.1.8.
+BasedOnStyle: Google
+Standard: c++17
+ColumnLimit: 100
+IndentWidth: 2
+UseTab: Never
+LineEnding: LF
+InsertBraces: true
+SortIncludes: Never
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false

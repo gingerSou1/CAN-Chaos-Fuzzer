@@ -1,3 +1,9 @@
+// SPDX-License-Identifier: MIT
+/**
+ * @file
+ * @brief Milestone 1 timing, processing-budget and CAN defaults.
+ */
+
 #pragma once
 
 #include <stdint.h>

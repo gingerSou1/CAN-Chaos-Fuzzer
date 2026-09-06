@@ -1,3 +1,9 @@
+// SPDX-License-Identifier: MIT
+/**
+ * @file
+ * @brief Bench CAN receiver example; not hardware listen-only mode.
+ */
+
 #include <Arduino.h>
 #include <Arduino_CAN.h>
 
@@ -7,7 +13,9 @@ void setup() {
 
   if (!CAN.begin(CanBitRate::BR_500k)) {
     Serial.println("CAN init failed!");
-    while (1) { delay(1000); }
+    while (1) {
+      delay(1000);
+    }
   }
   Serial.println("CAN Sniffer Ready (500 kbps)");
 }
@@ -19,14 +27,18 @@ void loop() {
 
     Serial.print("ID: 0x");
     Serial.print(id, HEX);
-    if (!msg.isStandardId()) Serial.print(" (EXT)");
+    if (!msg.isStandardId()) {
+      Serial.print(" (EXT)");
+    }
     Serial.print(" DLC: ");
     Serial.print(msg.data_length);
     Serial.print(" Data: ");
 
     for (uint8_t i = 0; i < msg.data_length && i < 8; ++i) {
       byte const b = msg.data[i];
-      if (b < 0x10) Serial.print("0");
+      if (b < 0x10) {
+        Serial.print("0");
+      }
       Serial.print(b, HEX);
       Serial.print(" ");
     }

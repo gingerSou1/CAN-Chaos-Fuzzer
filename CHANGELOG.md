@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Add coding, file-header, API-documentation, security reporting and release-tag
+  conventions, editor/formatter settings and a pull request template.
+- Document public safety/control contracts and label project-owned source licenses.
+- Use the portable compiler's executable aliases directly instead of generating
+  command-shell wrappers for host builds.
+
 - Establish and pin the UNO R4 WiFi PlatformIO/Arduino build baseline; add a
   separately filtered sniffer environment.
 - Verify Arduino_CAN 1.6.0 core write semantics (1 is success), expose error state

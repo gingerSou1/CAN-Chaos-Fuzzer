@@ -1,3 +1,9 @@
+// SPDX-License-Identifier: MIT
+/**
+ * @file
+ * @brief Line rejection, argument validation and serial command dispatch.
+ */
+
 #include "command_interface.h"
 
 #include <string.h>
@@ -20,7 +26,9 @@ void CommandInterface::begin() {
 void CommandInterface::poll(uint32_t nowMs) {
   for (uint8_t consumed = 0; consumed < kSerialBytesPerLoop && serial_.available(); ++consumed) {
     int const input = serial_.read();
-    if (input < 0) break;
+    if (input < 0) {
+      break;
+    }
     char const c = static_cast<char>(input);
     if (c == '\n') {
       buffer_[length_] = '\0';
@@ -33,7 +41,9 @@ void CommandInterface::poll(uint32_t nowMs) {
       // One complete line per poll. Commands following STOP wait until next loop.
       return;
     }
-    if (discarding_) continue;
+    if (discarding_) {
+      continue;
+    }
     if ((input < 32 && c != '\t' && c != '\r' && c != '\v' && c != '\f') || input > 126) {
       discarding_ = true;
       logger_.error(F("INVALID COMMAND CHARACTER"));
@@ -129,7 +139,9 @@ bool CommandInterface::parseUnsigned(const char* text, uint32_t& value) const {
       return false;
     }
     uint32_t const digit = static_cast<uint32_t>(text[i] - '0');
-    if (parsed > (UINT32_MAX - digit) / 10U) return false;
+    if (parsed > (UINT32_MAX - digit) / 10U) {
+      return false;
+    }
     parsed = (parsed * 10U) + digit;
   }
 

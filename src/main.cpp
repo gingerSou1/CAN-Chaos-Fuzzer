@@ -1,3 +1,9 @@
+// SPDX-License-Identifier: MIT
+/**
+ * @file
+ * @brief Firmware startup and bounded cooperative loop.
+ */
+
 #include <Arduino.h>
 
 #include "can_driver.h"
@@ -35,12 +41,15 @@ void setup() {
 void loop() {
   canDriver.pollHealth();
   // Reconcile a fault before processing commands that report experiment counters.
-  if (safety.state() == SafetyState::Fault) experiment.stop();
+  if (safety.state() == SafetyState::Fault) {
+    experiment.stop();
+  }
   commandInterface.poll(millis());
   experiment.update(millis());
 
   CanFrame frame;
-  for (uint8_t received = 0; received < kCanRxFramesPerLoop && canDriver.receive(frame); ++received) {
+  for (uint8_t received = 0; received < kCanRxFramesPerLoop && canDriver.receive(frame);
+       ++received) {
     logger.frameRx(frame);
   }
   logger.poll();

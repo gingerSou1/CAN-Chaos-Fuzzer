@@ -1,5 +1,16 @@
 # Developer Guide
 
+Follow [CONTRIBUTING.md](../CONTRIBUTING.md) for coding, headers, API tags and
+release conventions, and [SECURITY.md](../SECURITY.md) for security reporting.
+
+## Recorded Milestone 1A/1B validation
+
+On 2026-09-06, the clean `uno_r4_wifi` build and separate `sniffer` build passed,
+and `pio test -e host -v` reported 18 tests passed, zero failed and zero ignored.
+The host compiler was LLVM-MinGW 20250709; the environment versions are listed
+below. This records software validation only; no board upload or physical CAN
+acceptance was performed. Rerun the checks when the source or dependencies change.
+
 ## Build
 
 Install PlatformIO, then run:

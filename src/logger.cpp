@@ -1,3 +1,9 @@
+// SPDX-License-Identifier: MIT
+/**
+ * @file
+ * @brief Fixed-size log buffering and diagnostic text output.
+ */
+
 #include "logger.h"
 
 #include <Arduino.h>
@@ -6,8 +12,11 @@
 namespace canchaos {
 
 size_t BufferedLogOutput::write(uint8_t value) {
-  if (lineLength_ < sizeof(line_)) line_[lineLength_++] = value;
-  else lineOverflow_ = true;
+  if (lineLength_ < sizeof(line_)) {
+    line_[lineLength_++] = value;
+  } else {
+    lineOverflow_ = true;
+  }
   if (value == '\n') {
     if (lineOverflow_ || lineLength_ > sizeof(queue_) - count_) {
       ++droppedLines_;
@@ -25,7 +34,9 @@ size_t BufferedLogOutput::write(uint8_t value) {
 
 void BufferedLogOutput::drain(Print& destination, size_t budget) {
   while (budget-- > 0 && count_ > 0) {
-    if (destination.write(queue_[head_]) != 1) break;
+    if (destination.write(queue_[head_]) != 1) {
+      break;
+    }
     head_ = (head_ + 1) % sizeof(queue_);
     --count_;
   }
@@ -62,8 +73,9 @@ void Logger::status(SafetyState state, const CanDriver& can, const ExperimentMan
   out_.print(F("STATE: "));
   out_.println(toString(state));
   out_.print(F("CAN: "));
-  out_.println(can.status() == CanStatus::Online ? F("ONLINE") :
-               can.status() == CanStatus::Error ? F("ERROR") : F("OFFLINE"));
+  out_.println(can.status() == CanStatus::Online  ? F("ONLINE")
+               : can.status() == CanStatus::Error ? F("ERROR")
+                                                  : F("OFFLINE"));
   out_.print(F("BITRATE: "));
   out_.println(can.bitrate());
   out_.print(F("EXPERIMENT: "));
@@ -100,13 +112,9 @@ void Logger::status(SafetyState state, const CanDriver& can, const ExperimentMan
   out_.println(buffer_.droppedLines());
 }
 
-void Logger::frameRx(const CanFrame& frame) {
-  printFrame(F("RX"), frame);
-}
+void Logger::frameRx(const CanFrame& frame) { printFrame(F("RX"), frame); }
 
-void Logger::frameTx(const CanFrame& frame) {
-  printFrame(F("TX"), frame);
-}
+void Logger::frameTx(const CanFrame& frame) { printFrame(F("TX"), frame); }
 
 void Logger::ok(const __FlashStringHelper* message) {
   out_.print(F("OK: "));

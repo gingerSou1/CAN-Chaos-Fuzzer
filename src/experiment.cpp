@@ -1,12 +1,20 @@
+// SPDX-License-Identifier: MIT
+/**
+ * @file
+ * @brief Known-frame scheduling, cancellation and outcome accounting.
+ */
+
 #include "experiment.h"
 
 #include "config.h"
 
 namespace canchaos {
 
-ExperimentManager::ExperimentManager(CanDriver& can, SafetyManager& safety) : can_(can), safety_(safety) {}
+ExperimentManager::ExperimentManager(CanDriver& can, SafetyManager& safety)
+    : can_(can), safety_(safety) {}
 
-bool ExperimentManager::startKnownFrameDemo(uint32_t nowMs, uint32_t durationMs, uint32_t intervalMs) {
+bool ExperimentManager::startKnownFrameDemo(uint32_t nowMs, uint32_t durationMs,
+                                            uint32_t intervalMs) {
   can_.pollHealth();
   if (active_ || can_.status() != CanStatus::Online || durationMs == 0 ||
       durationMs > kMaxExperimentDurationMs || intervalMs < kMinTxIntervalMs ||
@@ -70,13 +78,9 @@ void ExperimentManager::update(uint32_t nowMs) {
   }
 }
 
-void ExperimentManager::resetStats() {
-  stats_ = ExperimentStats{};
-}
+void ExperimentManager::resetStats() { stats_ = ExperimentStats{}; }
 
-bool ExperimentManager::active() const {
-  return active_ && safety_.canTransmit();
-}
+bool ExperimentManager::active() const { return active_ && safety_.canTransmit(); }
 
 uint32_t ExperimentManager::remainingMs(uint32_t nowMs) const {
   if (!active() || (nowMs - startedAtMs_) >= durationMs_) {
@@ -85,9 +89,7 @@ uint32_t ExperimentManager::remainingMs(uint32_t nowMs) const {
   return durationMs_ - (nowMs - startedAtMs_);
 }
 
-const ExperimentStats& ExperimentManager::stats() const {
-  return stats_;
-}
+const ExperimentStats& ExperimentManager::stats() const { return stats_; }
 
 CanFrame ExperimentManager::buildKnownFrame(uint32_t nowMs) {
   CanFrame frame;

@@ -1,5 +1,8 @@
 # CAN Chaos Fuzzer
 
+Contributor guidance: [coding and release conventions](CONTRIBUTING.md),
+[security policy](SECURITY.md), and [build/validation guide](docs/developer-guide.md).
+
 > A CAN bus fuzzing and chaos-injection platform for embedded security, resilience, and adversarial verification testing.
 
 CAN Chaos Fuzzer is an open-source embedded security research project designed to evaluate how CAN-based systems behave when normal assumptions about network traffic are intentionally violated.

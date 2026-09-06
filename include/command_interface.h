@@ -1,3 +1,9 @@
+// SPDX-License-Identifier: MIT
+/**
+ * @file
+ * @brief Bounded serial command parser and control dispatch.
+ */
+
 #pragma once
 
 #include <Arduino.h>
@@ -9,12 +15,20 @@
 
 namespace canchaos {
 
+/**
+ * @brief Main-loop-only parser; dependencies are non-owning and must outlive the interface.
+ *
+ * @note Input is untrusted but unauthenticated. LF ends a line; rejected lines are drained to LF.
+
+ */
 class CommandInterface {
  public:
-  CommandInterface(Stream& serial, SafetyManager& safety, CanDriver& can, ExperimentManager& experiment,
-                   Logger& logger);
+  CommandInterface(Stream& serial, SafetyManager& safety, CanDriver& can,
+                   ExperimentManager& experiment, Logger& logger);
 
+  /// Reset parser state and enqueue help; does not arm or start an experiment.
   void begin();
+  /// Consume at most kSerialBytesPerLoop bytes and one line, using a current millis() snapshot.
   void poll(uint32_t nowMs);
 
  private:

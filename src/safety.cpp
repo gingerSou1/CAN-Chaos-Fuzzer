@@ -1,3 +1,9 @@
+// SPDX-License-Identifier: MIT
+/**
+ * @file
+ * @brief Explicit safety-state transitions and fault latching.
+ */
+
 #include "safety.h"
 
 namespace canchaos {
@@ -41,17 +47,11 @@ bool SafetyManager::stop() {
   return true;
 }
 
-void SafetyManager::fault() {
-  state_ = SafetyState::Fault;
-}
+void SafetyManager::fault() { state_ = SafetyState::Fault; }
 
-SafetyState SafetyManager::state() const {
-  return state_;
-}
+SafetyState SafetyManager::state() const { return state_; }
 
-bool SafetyManager::canTransmit() const {
-  return state_ == SafetyState::Running;
-}
+bool SafetyManager::canTransmit() const { return state_ == SafetyState::Running; }
 
 const char* toString(SafetyState state) {
   switch (state) {

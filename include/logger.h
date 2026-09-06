@@ -1,3 +1,9 @@
+// SPDX-License-Identifier: MIT
+/**
+ * @file
+ * @brief Bounded whole-line logging and control/status formatting.
+ */
+
 #pragma once
 
 #include <Arduino.h>
@@ -10,14 +16,16 @@
 
 namespace canchaos {
 
-// Buffer whole lines so verbose output cannot monopolize command processing.
+/// Main-loop-only line queue; overflow drops whole lines rather than blocking control processing.
 class BufferedLogOutput : public Print {
  public:
   using Print::write;
   size_t write(uint8_t value) override;
+  /// Write at most budget bytes; destination.write() may itself block inside the framework.
   void drain(Print& destination, size_t budget);
   uint32_t droppedLines() const { return droppedLines_; }
   void resetStats() { droppedLines_ = 0; }
+
  private:
   uint8_t queue_[2048] = {};
   uint8_t line_[160] = {};
@@ -30,12 +38,14 @@ class BufferedLogOutput : public Print {
 
 class Logger {
  public:
+  /// @param out Non-owning output sink that must outlive the logger.
   explicit Logger(Print& out);
 
   void banner();
   void help();
   void status(SafetyState state, const CanDriver& can, const ExperimentManager& experiment,
               uint32_t nowMs);
+  /// Drain one output budget. Responses may be dropped; commands do not wait for output delivery.
   void poll();
   void resetStats() { buffer_.resetStats(); }
   void frameRx(const CanFrame& frame);
