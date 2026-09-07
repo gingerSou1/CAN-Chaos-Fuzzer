@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Complete Milestone 1C hardware acceptance: record the healthy baseline, deliberate
+  CAN write-failure fault (`-60003`), latched fault after reconnect, and SAFE recovery
+  by reboot. Asynchronous controller-error handling remains host-test validated;
+  it was not observed during this bench fault. See `docs/milestone-1c-validation.md`.
+
 - Add coding, file-header, API-documentation, security reporting and release-tag
   conventions, editor/formatter settings and a pull request template.
 - Document public safety/control contracts and label project-owned source licenses.

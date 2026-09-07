@@ -25,7 +25,7 @@ The project combines traditional fuzz testing with concepts from adversarial tes
 
 ## Project Status
 
-**Current Phase: Milestone 1C — Hardware Acceptance**
+**Current Phase: Milestone 1C — Hardware Acceptance COMPLETE**
 
 Milestones 1A and 1B established the software, control, and safety foundation.
 
@@ -52,18 +52,19 @@ Milestones 1A and 1B established the software, control, and safety foundation.
 
 ### Hardware Acceptance
 
-- [ ] Flash firmware to physical UNO R4 WiFi
-- [ ] Validate SAFE state on hardware boot
-- [ ] Validate physical CAN initialization
-- [ ] Validate known-frame CAN transmission
-- [ ] Validate known-frame CAN reception
-- [ ] Validate independent sniffer observation
-- [ ] Validate STOP behavior on hardware
-- [ ] Measure STOP latency
-- [ ] Validate CAN fault behavior
-- [ ] Validate reset/reconnect safety behavior
+- [x] Flash firmware to physical UNO R4 WiFi
+- [x] Validate SAFE state on hardware boot
+- [x] Validate physical CAN initialization
+- [x] Validate known-frame CAN transmission
+- [x] Validate known-frame CAN reception
+- [x] Validate independent sniffer observation
+- [x] Validate STOP behavior on hardware
+- [x] Validate CAN fault behavior
+- [x] Validate reset/reconnect safety behavior
 
-Fuzzing strategies will be implemented **after hardware acceptance is complete**.
+Milestone 1C is complete; see the [bench validation record](docs/milestone-1c-validation.md) for evidence and limitations. Quantitative STOP latency remains a follow-up measurement.
+
+Fuzzing strategies remain planned for Milestone 2.
 
 ---
 
@@ -1262,15 +1263,18 @@ docs/aerospace-mapping.md
 
 ### Milestone 1C — Hardware Acceptance
 
-- [ ] Physical CAN bench
-- [ ] Firmware upload
-- [ ] SAFE-on-boot verification
-- [ ] Known-frame TX
-- [ ] Known-frame RX
-- [ ] Independent sniffer validation
-- [ ] Hardware fault validation
-- [ ] STOP latency measurement
-- [ ] Reset/reconnect testing
+- [x] Physical CAN bench
+- [x] Firmware upload
+- [x] SAFE-on-boot verification
+- [x] Known-frame TX
+- [x] Known-frame RX
+- [x] Independent sniffer validation
+- [x] Hardware fault validation
+- [x] Reset/reconnect testing
+
+### Follow-up measurements
+
+- [ ] Measure quantitative STOP latency on hardware; it has not been measured. This is a future measurement outside the completed Milestone 1C acceptance scope.
 
 ### Milestone 2 — Core Fuzzer
 
