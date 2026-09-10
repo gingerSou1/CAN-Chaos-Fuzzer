@@ -25,7 +25,14 @@ The project combines traditional fuzz testing with concepts from adversarial tes
 
 ## Project Status
 
-**Current Phase: Milestone 1C — Hardware Acceptance COMPLETE**
+**Milestone 1 — COMPLETE** (`v0.1.0-can-foundation`, hardware validated).
+
+**Milestone 2 — IN PROGRESS: Milestone 2A — Deterministic Known-ID Payload Fuzzing.**
+
+The six initial payload strategies and `fuzz start` command are implemented with
+host regression coverage; fuzz hardware validation is pending. See the
+[Milestone 2A specification](docs/milestone-2a-deterministic-fuzzing.md) for usage,
+deterministic ordering, limits and validation procedure.
 
 Milestones 1A and 1B established the software, control, and safety foundation.
 
@@ -64,7 +71,7 @@ Milestones 1A and 1B established the software, control, and safety foundation.
 
 Milestone 1C is complete; see the [bench validation record](docs/milestone-1c-validation.md) for evidence and limitations. Quantitative STOP latency remains a follow-up measurement.
 
-Fuzzing strategies remain planned for Milestone 2.
+Milestone 2A adds deterministic payload strategies while preserving the Milestone 1 known-frame demo.
 
 ---
 

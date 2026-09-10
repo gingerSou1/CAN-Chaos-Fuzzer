@@ -69,6 +69,42 @@ void CommandInterface::handleLine(char* line, uint32_t nowMs) {
   if (command == nullptr) {
     return;
   }
+  if (strcmp(command, "fuzz") == 0) {
+    char* countText = strtok(nullptr, " \t\r\v\f");
+    char* intervalText = strtok(nullptr, " \t\r\v\f");
+    char* trailing = strtok(nullptr, " \t\r\v\f");
+    if (arg1 == nullptr || strcmp(arg1, "start") != 0 || intervalText == nullptr ||
+        trailing != nullptr) {
+      logger_.error(F("EXPECTED fuzz start <strategy> <seed> <count> <interval_ms>"));
+      return;
+    }
+    FuzzStrategy strategy;
+    if (!parseFuzzStrategy(arg2, strategy)) {
+      logger_.error(F("INVALID FUZZ STRATEGY"));
+      return;
+    }
+    uint32_t seed = 0;
+    uint32_t count = 0;
+    uint32_t intervalMs = 0;
+    if (!parseUnsigned(extra, seed)) {
+      logger_.error(F("INVALID SEED"));
+      return;
+    }
+    if (!parseUnsigned(countText, count)) {
+      logger_.error(F("INVALID COUNT"));
+      return;
+    }
+    if (!parseUnsigned(intervalText, intervalMs)) {
+      logger_.error(F("INVALID INTERVAL"));
+      return;
+    }
+    if (experiment_.startFuzz(nowMs, strategy, seed, count, intervalMs)) {
+      logger_.ok(F("FUZZ EXPERIMENT STARTED"));
+    } else {
+      logger_.error(F("DEVICE NOT ARMED OR UNSAFE CONFIG"));
+    }
+    return;
+  }
   if (extra != nullptr || (strcmp(command, "start") != 0 && arg1 != nullptr)) {
     logger_.error(F("UNEXPECTED ARGUMENT"));
     return;

@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Add Milestone 2A deterministic known-ID payload fuzzing with explicit xorshift32
+  seed semantics and random, bitflip, zero, ff, boundary and walkingbit strategies.
+- Add `fuzz start <strategy> <seed> <count> <interval_ms>`, bounded experiment
+  scheduling and per-run reproducibility status through the existing safety,
+  driver and logger boundaries; preserve the original known-frame demo.
+- Add 14 host regressions (32 total) and document deterministic ordering, duration
+  limits and future fuzz hardware acceptance, which has not been performed.
+
 - Complete Milestone 1C hardware acceptance: record the healthy baseline, deliberate
   CAN write-failure fault (`-60003`), latched fault after reconnect, and SAFE recovery
   by reboot. Asynchronous controller-error handling remains host-test validated;

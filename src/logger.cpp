@@ -51,7 +51,7 @@ void Logger::poll() {
 }
 
 void Logger::banner() {
-  out_.println(F("CAN Chaos Fuzzer Milestone 1"));
+  out_.println(F("CAN Chaos Fuzzer Milestone 2A"));
   out_.println(F("Boot state: SAFE. Transmit requires arm then start."));
 }
 
@@ -61,6 +61,8 @@ void Logger::help() {
   out_.println(F("  arm"));
   out_.println(F("  disarm"));
   out_.println(F("  start [duration_ms] [interval_ms]"));
+  out_.println(F("  fuzz start <strategy> <seed> <count> <interval_ms>"));
+  out_.println(F("    random bitflip zero ff boundary walkingbit"));
   out_.println(F("  stop"));
   out_.println(F("  stats"));
   out_.println(F("  reset"));
@@ -108,6 +110,28 @@ void Logger::status(SafetyState state, const CanDriver& can, const ExperimentMan
   out_.println(experiment.stats().rejectedStarts);
   out_.print(F("KNOWN_FRAMES_ACCEPTED: "));
   out_.println(experiment.stats().knownFramesSent);
+  out_.print(F("EXPERIMENT_MODE: "));
+  out_.println(experiment.fuzzMode() ? F("FUZZ") : F("KNOWN"));
+  if (experiment.fuzzMode()) {
+    const FuzzRun& run = experiment.fuzzRun();
+    out_.print(F("FUZZ_STRATEGY: "));
+    out_.println(toString(run.strategy));
+    out_.print(F("FUZZ_SEED: "));
+    out_.println(run.seed);
+    out_.print(F("FUZZ_REQUESTED: "));
+    out_.println(run.requested);
+    out_.print(F("FUZZ_INTERVAL_MS: "));
+    out_.println(run.intervalMs);
+    out_.print(F("FUZZ_GENERATED: "));
+    out_.println(run.generated);
+    out_.print(F("FUZZ_TX_ACCEPTED: "));
+    out_.println(run.accepted);
+    if (run.generated > 0) {
+      out_.print(F("FUZZ_LAST_INDEX: "));
+      out_.println(run.generated - 1);
+      printFrame(F("FUZZ_LAST_GENERATED"), run.lastFrame);
+    }
+  }
   out_.print(F("LOG_DROPPED_LINES: "));
   out_.println(buffer_.droppedLines());
 }

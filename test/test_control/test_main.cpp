@@ -399,6 +399,8 @@ void test_actual_loop_bounds_and_stop_with_rx_backlog() {
   TEST_ASSERT_LESS_OR_EQUAL(kLogBytesPerLoop, Serial.output.size() - bytes);
 }
 
+void runFuzzTests();
+
 int main() {
   UNITY_BEGIN();
   RUN_TEST(test_transitions_and_invalid_transitions);
@@ -419,5 +421,6 @@ int main() {
   RUN_TEST(test_reset_counters_and_status);
   RUN_TEST(test_logging_budget_backpressure_and_whole_line_drops);
   RUN_TEST(test_actual_loop_bounds_and_stop_with_rx_backlog);
+  runFuzzTests();
   return UNITY_END();
 }

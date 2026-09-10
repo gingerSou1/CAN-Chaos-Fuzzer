@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 /**
  * @file
- * @brief Known-frame scheduling, cancellation and outcome accounting.
+ * @brief Known-frame and fuzz scheduling, cancellation and outcome accounting.
  */
 
 #include "experiment.h"
@@ -29,6 +29,7 @@ bool ExperimentManager::startKnownFrameDemo(uint32_t nowMs, uint32_t durationMs,
   }
 
   active_ = true;
+  fuzzMode_ = false;
   startedAtMs_ = nowMs;
   durationMs_ = durationMs;
   intervalMs_ = intervalMs;
@@ -36,6 +37,64 @@ bool ExperimentManager::startKnownFrameDemo(uint32_t nowMs, uint32_t durationMs,
   sequence_ = 0;
   stats_.started++;
   return true;
+}
+
+bool ExperimentManager::startFuzz(uint32_t nowMs, FuzzStrategy strategy, uint32_t seed,
+                                  uint32_t count, uint32_t intervalMs) {
+  can_.pollHealth();
+  if (active_ || can_.status() != CanStatus::Online || !validFuzzStrategy(strategy) ||
+      intervalMs < kMinTxIntervalMs || intervalMs > kMaxExperimentDurationMs || count == 0 ||
+      count > kMaxExperimentDurationMs / intervalMs || !safety_.start()) {
+    ++stats_.rejectedStarts;
+    return false;
+  }
+  const uint8_t base[8] = {0xCA, 0xFE, 0x00, 0x01, 0, 0, 0, 0};
+  fuzzEngine_.begin(strategy, seed, base);
+  fuzzRun_ = FuzzRun{};
+  fuzzRun_.strategy = strategy;
+  fuzzRun_.seed = seed;
+  fuzzRun_.requested = count;
+  fuzzRun_.intervalMs = intervalMs;
+  fuzzMode_ = true;
+  fuzzPending_ = false;
+  active_ = true;
+  startedAtMs_ = nowMs;
+  durationMs_ = count * intervalMs;
+  intervalMs_ = intervalMs;
+  lastTxMs_ = nowMs - intervalMs;
+  ++stats_.started;
+  return true;
+}
+
+void ExperimentManager::updateFuzz(uint32_t nowMs) {
+  if ((nowMs - startedAtMs_) >= durationMs_) {
+    stop();
+    return;
+  }
+  if ((nowMs - lastTxMs_) < intervalMs_) {
+    return;
+  }
+  if (!fuzzPending_) {
+    fuzzRun_.lastFrame = CanFrame{};
+    fuzzRun_.lastFrame.id = kKnownFrameId;
+    fuzzRun_.lastFrame.length = 8;
+    fuzzRun_.lastFrame.timestampMs = nowMs;
+    fuzzEngine_.next(fuzzRun_.lastFrame.data);
+    ++fuzzRun_.generated;
+    fuzzPending_ = true;
+  }
+  if (can_.send(fuzzRun_.lastFrame)) {
+    ++fuzzRun_.accepted;
+    fuzzPending_ = false;
+    if (fuzzRun_.accepted == fuzzRun_.requested) {
+      active_ = false;
+      ++stats_.completed;
+      (void)safety_.stop();
+    }
+  } else if (safety_.state() == SafetyState::Fault) {
+    stop();
+  }
+  lastTxMs_ = nowMs;
 }
 
 void ExperimentManager::stop() {
@@ -59,6 +118,11 @@ void ExperimentManager::update(uint32_t nowMs) {
     return;
   }
 
+  if (fuzzMode_) {
+    updateFuzz(nowMs);
+    return;
+  }
+
   if ((nowMs - startedAtMs_) >= durationMs_) {
     active_ = false;
     stats_.completed++;
@@ -78,7 +142,15 @@ void ExperimentManager::update(uint32_t nowMs) {
   }
 }
 
-void ExperimentManager::resetStats() { stats_ = ExperimentStats{}; }
+void ExperimentManager::resetStats() {
+  stats_ = ExperimentStats{};
+  // A direct counter reset must not switch an active fuzz run into the known demo.
+  if (!active_) {
+    fuzzRun_ = FuzzRun{};
+    fuzzPending_ = false;
+    fuzzMode_ = false;
+  }
+}
 
 bool ExperimentManager::active() const { return active_ && safety_.canTransmit(); }
 
