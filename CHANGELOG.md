@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Add a bounded interactive serial console with a `CAN>` prompt, character echo,
+  Backspace/Delete editing, CR/LF/CRLF handling and a `menu` alias for `help`.
+  Prompts and echo share the existing output queue; dropped console fragments
+  contribute to `LOG_DROPPED_LINES`. Scripted clients must account for echo and
+  prompts, and CR now terminates a command instead of acting as token whitespace.
+- Refocus README on current capabilities and project direction; retain detailed
+  experiment sketches in `docs/experiment-design.md` and update architecture/CLI docs.
+- Add 13 console regressions while retaining the 32 foundation/fuzz tests.
+
 - Add Milestone 2A deterministic known-ID payload fuzzing with explicit xorshift32
   seed semantics and random, bitflip, zero, ff, boundary and walkingbit strategies.
 - Add `fuzz start <strategy> <seed> <count> <interval_ms>`, bounded experiment

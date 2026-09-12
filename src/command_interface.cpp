@@ -19,8 +19,10 @@ CommandInterface::CommandInterface(Stream& serial, SafetyManager& safety, CanDri
 void CommandInterface::begin() {
   length_ = 0;
   discarding_ = false;
+  invalidCharacter_ = false;
+  skipLf_ = false;
   buffer_[0] = '\0';
-  logger_.help();
+  logger_.consoleStart(safety_.state());
 }
 
 void CommandInterface::poll(uint32_t nowMs) {
@@ -30,32 +32,51 @@ void CommandInterface::poll(uint32_t nowMs) {
       break;
     }
     char const c = static_cast<char>(input);
-    if (c == '\n') {
+    if (skipLf_) {
+      skipLf_ = false;
+      if (c == '\n') {
+        continue;
+      }
+    }
+    if (c == '\r' || c == '\n') {
+      skipLf_ = c == '\r';
+      logger_.endInputLine();
       buffer_[length_] = '\0';
-      if (!discarding_ && length_ > 0) {
+      if (discarding_) {
+        logger_.error(invalidCharacter_ ? F("INVALID COMMAND CHARACTER") : F("COMMAND TOO LONG"));
+      } else if (length_ > 0) {
         handleLine(buffer_, nowMs);
       }
       length_ = 0;
       discarding_ = false;
+      invalidCharacter_ = false;
       buffer_[0] = '\0';
+      logger_.prompt();
       // One complete line per poll. Commands following STOP wait until next loop.
       return;
     }
     if (discarding_) {
       continue;
     }
-    if ((input < 32 && c != '\t' && c != '\r' && c != '\v' && c != '\f') || input > 126) {
+    if (input == 0x08 || input == 0x7F) {
+      if (length_ > 0) {
+        buffer_[--length_] = '\0';
+        logger_.eraseCharacter();
+      }
+      continue;
+    }
+    if ((input < 32 && c != '\t' && c != '\v' && c != '\f') || input > 126) {
       discarding_ = true;
-      logger_.error(F("INVALID COMMAND CHARACTER"));
+      invalidCharacter_ = true;
       continue;
     }
     if (length_ < (sizeof(buffer_) - 1)) {
       buffer_[length_++] = c;
+      logger_.echo(input >= 32 ? c : ' ');
     } else {
       length_ = 0;
       discarding_ = true;
       buffer_[0] = '\0';
-      logger_.error(F("COMMAND TOO LONG"));
     }
   }
 }
@@ -157,7 +178,7 @@ void CommandInterface::handleLine(char* line, uint32_t nowMs) {
     } else {
       logger_.error(F("RESET REJECTED IN FAULT"));
     }
-  } else if (strcmp(command, "help") == 0) {
+  } else if (strcmp(command, "help") == 0 || strcmp(command, "menu") == 0) {
     logger_.help();
   } else {
     logger_.error(F("UNKNOWN COMMAND"));

@@ -27,6 +27,14 @@ Expected later capabilities include:
 
 ## Assumptions
 
+The earlier README framed this work as post-bus-access resilience: a node may be
+malfunctioning, compromised or deliberately adversarial in the isolated lab.
+Questions include trust in CAN IDs, payload and timing assumptions, valid messages
+in invalid states, priority abuse, stale replay, availability, detection and recovery.
+Milestone 2A now supplies fixed-ID payload mutation; replay, load and arbitration
+capabilities above remain future work. The project models no particular production
+vehicle, aircraft or industrial installation.
+
 - Proper termination: 120 ohm at both ends of the bench bus.
 - Known bitrate: 500 kbps for Milestone 1.
 - Legal and authorized lab setting with safety procedures.

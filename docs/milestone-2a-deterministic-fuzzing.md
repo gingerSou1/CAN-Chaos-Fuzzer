@@ -1,8 +1,10 @@
 # Milestone 2A: Deterministic Known-ID Payload Fuzzing
 
 Milestone 1 is COMPLETE at baseline `v0.1.0-can-foundation`. Milestone 2 is
-IN PROGRESS. Milestone 2A adds deterministic payload generation and host-validated
-orchestration; physical validation of these new fuzz runs is still pending.
+IN PROGRESS. The maintainer reports Milestone 2A at commit `eecea63` implemented,
+host-tested and hardware-validated. The software evidence below records the
+implementation checks; it is not a detailed log of the later hardware validation.
+The subsequent interactive CLI update has not been uploaded or bench-tested.
 
 ## Objective and architecture
 
@@ -197,7 +199,7 @@ Tests exercise production control/engine code with host boundary fakes; they do
 not establish physical CAN behavior. No firmware upload or hardware test was
 performed. The final whitespace/status checks are recorded in the review report.
 
-## Future hardware validation procedure
+## Hardware validation procedure for repeat checks
 
 Use the existing isolated two-node 500 kbps bench, WiFi transmitter and independent
 Minima sniffer. This is a procedure for later review, not a record of execution.

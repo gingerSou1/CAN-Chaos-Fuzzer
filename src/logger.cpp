@@ -18,18 +18,22 @@ size_t BufferedLogOutput::write(uint8_t value) {
     lineOverflow_ = true;
   }
   if (value == '\n') {
-    if (lineOverflow_ || lineLength_ > sizeof(queue_) - count_) {
-      ++droppedLines_;
-    } else {
-      for (size_t i = 0; i < lineLength_; ++i) {
-        queue_[(head_ + count_) % sizeof(queue_)] = line_[i];
-        ++count_;
-      }
-    }
-    lineLength_ = 0;
-    lineOverflow_ = false;
+    flushFragment();
   }
   return 1;
+}
+
+void BufferedLogOutput::flushFragment() {
+  if (lineOverflow_ || lineLength_ > sizeof(queue_) - count_) {
+    ++droppedLines_;
+  } else {
+    for (size_t i = 0; i < lineLength_; ++i) {
+      queue_[(head_ + count_) % sizeof(queue_)] = line_[i];
+      ++count_;
+    }
+  }
+  lineLength_ = 0;
+  lineOverflow_ = false;
 }
 
 void BufferedLogOutput::drain(Print& destination, size_t budget) {
@@ -50,23 +54,44 @@ void Logger::poll() {
   buffer_.drain(destination_, kLogBytesPerLoop);
 }
 
-void Logger::banner() {
-  out_.println(F("CAN Chaos Fuzzer Milestone 2A"));
-  out_.println(F("Boot state: SAFE. Transmit requires arm then start."));
+void Logger::banner() { out_.println(F("CAN Chaos Fuzzer")); }
+
+void Logger::consoleStart(SafetyState state) {
+  out_.print(F("STATE: "));
+  out_.println(toString(state));
+  out_.println(F("Type 'help' for commands."));
+  prompt();
 }
 
+void Logger::prompt() {
+  out_.print(F("CAN> "));
+  buffer_.flushFragment();
+}
+
+void Logger::echo(char value) {
+  out_.print(value);
+  buffer_.flushFragment();
+}
+
+void Logger::eraseCharacter() {
+  out_.print(F("\b \b"));
+  buffer_.flushFragment();
+}
+
+void Logger::endInputLine() { out_.println(); }
+
 void Logger::help() {
-  out_.println(F("Commands:"));
-  out_.println(F("  status"));
-  out_.println(F("  arm"));
-  out_.println(F("  disarm"));
+  out_.println(F("Available commands:"));
+  out_.println(F("  status / stats  Show state and runtime statistics"));
+  out_.println(F("  arm             Enter ARMED"));
+  out_.println(F("  disarm          Cancel and return to SAFE (unless faulted)"));
   out_.println(F("  start [duration_ms] [interval_ms]"));
+  out_.println(F("    Run the known-frame experiment"));
   out_.println(F("  fuzz start <strategy> <seed> <count> <interval_ms>"));
   out_.println(F("    random bitflip zero ff boundary walkingbit"));
-  out_.println(F("  stop"));
-  out_.println(F("  stats"));
-  out_.println(F("  reset"));
-  out_.println(F("  help"));
+  out_.println(F("  stop            Cancel the active experiment"));
+  out_.println(F("  reset           Stop, clear counters, SAFE; rejected in FAULT"));
+  out_.println(F("  help / menu     Display this menu"));
 }
 
 void Logger::status(SafetyState state, const CanDriver& can, const ExperimentManager& experiment,

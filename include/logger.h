@@ -21,6 +21,9 @@ class BufferedLogOutput : public Print {
  public:
   using Print::write;
   size_t write(uint8_t value) override;
+  /// Queue an unfinished console fragment atomically, without adding a newline.
+  /// Dropped fragments share droppedLines accounting; completed log lines stay atomic.
+  void flushFragment();
   /// Write at most budget bytes; destination.write() may itself block inside the framework.
   void drain(Print& destination, size_t budget);
   uint32_t droppedLines() const { return droppedLines_; }
@@ -43,6 +46,12 @@ class Logger {
 
   void banner();
   void help();
+  void consoleStart(SafetyState state);
+  void prompt();
+  /// Queue one sanitized display character; caller converts token whitespace to a space.
+  void echo(char value);
+  void eraseCharacter();
+  void endInputLine();
   void status(SafetyState state, const CanDriver& can, const ExperimentManager& experiment,
               uint32_t nowMs);
   /// Drain one output budget. Responses may be dropped; commands do not wait for output delivery.

@@ -18,7 +18,7 @@ namespace canchaos {
 /**
  * @brief Main-loop-only parser; dependencies are non-owning and must outlive the interface.
  *
- * @note Input is untrusted but unauthenticated. LF ends a line; rejected lines are drained to LF.
+ * @note Input is untrusted but unauthenticated. CR/LF end lines; CRLF is one terminator.
 
  */
 class CommandInterface {
@@ -26,7 +26,7 @@ class CommandInterface {
   CommandInterface(Stream& serial, SafetyManager& safety, CanDriver& can,
                    ExperimentManager& experiment, Logger& logger);
 
-  /// Reset parser state and enqueue help; does not arm or start an experiment.
+  /// Reset parser state and enqueue a brief hint/prompt; does not arm or start an experiment.
   void begin();
   /// Consume at most kSerialBytesPerLoop bytes and one line, using a current millis() snapshot.
   void poll(uint32_t nowMs);
@@ -43,6 +43,8 @@ class CommandInterface {
   char buffer_[80] = {0};
   uint8_t length_ = 0;
   bool discarding_ = false;
+  bool invalidCharacter_ = false;
+  bool skipLf_ = false;
 };
 
 }  // namespace canchaos
